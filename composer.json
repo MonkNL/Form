@@ -1,0 +1,23 @@
+{
+    "name": "monknl/form",
+    "type": "package",
+    "license": "none",
+    "version": "0.0.1",
+    "require": {
+        "php": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Forms\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "thomasvv.nl",
+            "homepage": "https://github.com/MonkNL/Form/",
+            "role": "Developer"
+        }
+    ],
+    "minimum-stability": "dev"
+    
+}

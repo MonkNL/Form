@@ -1,15 +1,10 @@
 <?php
-
-if (!class_exists('softError')) {
-class softError extends Exception { }
-}
-
-if (!class_exists('hardError')) {
-class hardError extends Exception { }
-}
+namespace Forms;
+class InvalidInput extends \Exception { }
+class InvalidCodeAlert extends \Exception { }
 
 class Input {
-	private $element, $tagName, $method;
+	private $tagName, $method;
 	private $isValid = true, $error = [], $validatedOn = [];
 	public $attributes = [];
 
@@ -33,13 +28,16 @@ class Input {
 	 * @param string $method - HTTP method ('get' or 'post').
 	 * @return void
 	 */
-	function __construct(object $element, string $method = 'get') {
-		$this->element = $element;
+	function __construct(string $method = 'get') {
 		$this->tagName = $element->tagName;
 		$this->setMethod($method);
 		$this->getAttributes();
 	}
-
+	static function importObject(object $element) {
+		$input = new self();
+		$input->tagName = $element->tagName;
+		$input->getAttributesFromObject($element);
+	}
 	/**
 	 * Set the HTTP method for the input.
 	 * @param string $method - HTTP method ('get' or 'post').
@@ -82,14 +80,14 @@ class Input {
 	 * Get attributes of the HTML element.
 	 * @return array|false - Array of attributes if available, false if none.
 	 */
-	function getAttributes() {
-		if (!$this->element->hasAttributes()) {
+	private function getAttributesFromObject(object $element) {
+		if (!$element->hasAttributes()) {
 			return false;
 		}
 		if (!empty($this->attributes)) {
 			return $this->attributes;
 		}
-		foreach ($this->element->attributes as $attribute) {
+		foreach ($element->attributes as $attribute) {
 			$name = mb_strtolower($attribute->nodeName);
 			$value = mb_strtolower($ttribute->nodeValue);
 			$this->attributes[$name] = $value;
@@ -190,12 +188,12 @@ class Input {
 							try {
 									call_user_func([$this, 'validate' . $attribute], $value);
 									$this->validatedOn[] = 'validate' . $attribute;
-							} catch (softError $e) {
-									return true;
-							} catch (hardError $e) {
+							} catch (InvalidInput $e) {
 									$this->setError($e, $key);
 									$this->isValid = false;
-							}
+							} catch (InvalidCodeAlert $e) {
+								error_log($e);
+							} 
 					}
 			}
 	}
@@ -217,10 +215,10 @@ class Input {
 	 */
 	private function filterVar($value, $filter) {
 			if (empty($element['value'])) {
-					throw new softError(__("No value"));
+					throw new InvalidCodeAlert(__("No value"));
 			}
 			if (filter_var($element['value'], $filter) === false) {
-					throw new hardError(__("Invalid value"));
+					throw new InvalidInput(__("Invalid value"));
 			}
 			return true;
 	}
@@ -234,7 +232,7 @@ class Input {
 	 */
 	private function validateAccept($value) {
 			if ($this->getType() != 'file') {
-					throw new softError(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Accept"));
+					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Accept"));
 			}
 	}
 
@@ -245,16 +243,16 @@ class Input {
 	 */
 	private function validatePattern($value) {
 			if (!in_array($this->getType(), ['text', 'search', 'url', 'tel', 'email', 'password'])) {
-					throw new softError(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"pattern"));
+					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"pattern"));
 			}
 			if (empty($value)) {
-					throw new softError(__("No value"));
+					throw new InvalidCodeAlert(__("No value"));
 			}
 			if (empty($this->getAttribute($pattern))) {
-					throw new softError(__("No %s attribute value", "pattern"));
+					throw new InvalidCodeAlert(__("No %s attribute value", "pattern"));
 			}
 			if (filter_var($value, FILTER_VALIDATE_REGEXP, ["options" => ["regexp" => "/^" . $this->getAttribute('pattern') . "$/"]]) === false) {
-					throw new hardError(__("Value doesn't match pattern"));
+					throw new InvalidInput(__("Value doesn't match pattern"));
 			}
 			return true;
 	}
@@ -266,29 +264,29 @@ class Input {
 	 */
 	private function validateMin($value) {
 			if (!in_array($this->getType(), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
-					throw new softError(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Min"));
+					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Min"));
 					return true;
 			}
 			if (empty($value)) {
-					throw new softError(__("No value"));
+					throw new InvalidCodeAlert(__("No value"));
 					return true;
 			}
 			if (in_array($this->getType(), ['range', 'number'])) {
 					if ($value < $this->getAttribute('min')) {
-							throw new hardError(__("Value lower than required minimum"));
+							throw new InvalidInput(__("Value lower than required minimum"));
 							return false;
 					}
 			} else {
 					if (preg_match($this->regex[$this->getType()], $this->getAttribute('min')) == false || strtotime($this->getAttribute('min'))) {
-							throw new softError(__("Invalid Attribute value"));
+							throw new InvalidCodeAlert(__("Invalid Attribute value"));
 							return true;
 					}
 					if (preg_match($this->regex[$this->getType()], $value) == false || strtotime($value) == false) {
-							throw new hardError(__("Value has an invalid format"));
+							throw new InvalidInput(__("Value has an invalid format"));
 							return false;
 					}
 					if (strtotime($value) < strtotime($this->getAttribute('min'))) {
-							throw new hardError(__("Value lower than required minimum"));
+							throw new InvalidInput(__("Value lower than required minimum"));
 							return false;
 					}
 			}
@@ -302,7 +300,7 @@ class Input {
 	 */
 	private function validateMax($value) {
 			if (!in_array($this->getAttribute('type'), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
-					throw new softError(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Max"));
+					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Max"));
 			}
 	}
 
@@ -313,11 +311,11 @@ class Input {
 	 */
 	private function validateRequired($value) {
 			if ($this->tagName != 'textarea' && $this->tagName != 'select' && !in_array($this->getAttribute('type'), ['text', 'search', 'url', 'tel', 'email', 'password', 'checkbox'])) {
-					throw new softError(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Required"));
+					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Required"));
 					return true;
 			}
 			if (empty($value)) {
-					throw new hardError(__("Input is required"));
+					throw new InvalidInput(__("Input is required"));
 					return false;
 			}
 			return true;
@@ -335,7 +333,7 @@ class Input {
 		#datetime-local, time	An integer number of seconds
 		#range, number	An integer
 		if(!in_array($this->getAttribute('type'),['date','month', 'week','datetime-local','range'])){
-			throw new softError(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Step"));
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Step"));
 		}
 	}
 		/**
@@ -347,19 +345,19 @@ class Input {
 		
 		#text, search, url, tel, email, password; also on the <textarea> element
 		if($this->tagName != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
-			throw new softError(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Minlength"));
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Minlength"));
 			return true;
 		}
 		if(empty($value)){
-			throw new softError(__("No value"));
+			throw new InvalidCodeAlert(__("No value"));
 			return true;
 		}
 		if(filter_var($this->getAttribute('minlength'), FILTER_VALIDATE_INT) === false){
-			throw new softError(__("Invalid attribute value"));
+			throw new InvalidCodeAlert(__("Invalid attribute value"));
 			return true;
 		}
 		if(mb_strlen($value) < $this->getAttribute('minlength')){
-			throw new hardError(__('Value is shorter than minimum required length'));
+			throw new InvalidInput(__('Value is shorter than minimum required length'));
 			return false;
 		}
 	}
@@ -372,38 +370,38 @@ class Input {
 		
 		#text, search, url, tel, email, password; also on the <textarea> element
 		if($this->tagName != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
-			throw new softError(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Maxlength"));
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Maxlength"));
 		}
 		if(empty($value)){
-			throw new softError(__("No value"));
+			throw new InvalidCodeAlert(__("No value"));
 		}
 		if(filter_var($this->getAttribute('maxlength'), FILTER_VALIDATE_INT) === false){
 			return true;
 		}
 		if(mb_strlen($value) > $this->getAttribute('maxlength')){
-			throw new hardError(__('Value is longer than the maximum permitted length'));
+			throw new InvalidInput(__('Value is longer than the maximum permitted length'));
 		}
 	}
 	private function validateFile($value){
 		switch($value['error']){
 			case UPLOAD_ERR_INI_SIZE: 	
-				throw new hardError(__('File exceeds max size in php.ini'));		
+				throw new InvalidInput(__('File exceeds max size in php.ini'));		
 				return false;
 				break;
 			case UPLOAD_ERR_PARTIAL:		
-				throw new hardError(__('File exceeds max size in html form'));		
+				throw new InvalidInput(__('File exceeds max size in html form'));		
 				return false;
 				break;
 			case UPLOAD_ERR_NO_FILE: 		
-				throw new hardError(__('File No file was uploaded'));						
+				throw new InvalidInput(__('File No file was uploaded'));						
 				return false;
 				break;
 			case UPLOAD_ERR_NO_TMP_DIR:	
-				throw new hardError(__('No /tmp dir to write to'));
+				throw new InvalidInput(__('No /tmp dir to write to'));
 				return false;
 				break;
 			case UPLOAD_ERR_CANT_WRITE:	
-				throw new hardError(__('File:: Error writing to disk'));
+				throw new InvalidInput(__('File:: Error writing to disk'));
 				return false;
 				break;
 			default:

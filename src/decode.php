@@ -14,15 +14,15 @@ class decodeForm{
 		libxml_use_internal_errors(false);
 		$xpath 			= new DOMXpath($dom);
 		$elements		= $xpath->query('//form | //label | //input | //select | //textarea | //button');
-		$form 			= [];
+		$form 			= new Form();
 		foreach ($elements as $element) {
 			if($element->tagName != 'form'){
-				$form[] = new input($element,$this->method);
+				$form->addInput(new input($element,$this->method));
 			  	continue;
 			}
 			if($element->getAttribute('method') != ""){
 				$method = mb_strtolower($element->getAttribute('method'));
-				$this->method = $method;
+				$form->setMethod($method);
 				continue;
 			}
 

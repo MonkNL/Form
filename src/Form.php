@@ -36,21 +36,23 @@ class Form{
 
         }
     }
+    private function addObject($element){
+       $this->elements[] = $element;
+    }
+    private function getElements(){
+        return $this->elements;
+    }
     function validate(){
-	    $elements = $this->form->getElements();
+	    $elements = $this->getElements();
 	    foreach($this->elements as $element){
-		    if($element->getTageName() == 'label' || $element->getTageName() == 'form'){
-				continue;
-			}
-			echo "<b>{$element->getName()}</b><br/>";
-			echo "Value:".print_r($element->getValue(),true)."<br/>";
-			echo "Attributes:".print_r($element->getAttributes(),true)."<br/>";
-			echo "Valid: ".($element->valid()?"Valid":"Invalid")."<br/>";
-			echo "Error: ".print_r($element->error(),true)."<br/>";
-			echo "<br/>";
-			if($element->valid() == false){
-				$this->isValid = false;
-			}
+            if(!in_array($element->getType(),['input','select','textarea'])){
+                continue;
+            }
+            if($element->valid()){
+                continue;
+            }
+            $element->getError();
+			$this->isValid = false;
 		}
 		return $this->isValid;
 	}

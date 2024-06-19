@@ -4,7 +4,7 @@ class InvalidInput extends \Exception { }
 class InvalidCodeAlert extends \Exception { }
 
 class Input {
-	private $tagName, $method;
+	private $type, $method;
 	private $isValid = true, $error = [], $validatedOn = [];
 	public $attributes = [];
 
@@ -35,7 +35,7 @@ class Input {
 	}
 	static function importObject(object $element) {
 		$input = new self();
-		$input->tagName = $element->tagName;
+		$input->type = $element->tagName;
 		$input->getAttributesFromObject($element);
 	}
 	/**
@@ -72,8 +72,8 @@ class Input {
 	 * Get the tag name of the HTML element.
 	 * @return string - The tag name.
 	 */
-	function getTagName() {
-		return $this->tagName;
+	function getType() {
+		return $this->type;
 	}
 
 	/**
@@ -89,7 +89,7 @@ class Input {
 		}
 		foreach ($element->attributes as $attribute) {
 			$name = mb_strtolower($attribute->nodeName);
-			$value = mb_strtolower($ttribute->nodeValue);
+			$value = $ttribute->nodeValue;
 			$this->attributes[$name] = $value;
 		}
 		return $this->attributes;
@@ -183,19 +183,20 @@ class Input {
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
 	private function validateMethods($value, $key = 0) {
-			foreach ($this->attributes as $attribute => $attribute_value) {
-					if (method_exists($this, 'validate' . $attribute)) {
-							try {
-									call_user_func([$this, 'validate' . $attribute], $value);
-									$this->validatedOn[] = 'validate' . $attribute;
-							} catch (InvalidInput $e) {
-									$this->setError($e, $key);
-									$this->isValid = false;
-							} catch (InvalidCodeAlert $e) {
-								error_log($e);
-							} 
-					}
+		foreach ($this->attributes as $attribute => $attribute_value) {
+			if (method_exists($this, 'validate' . $attribute)) {
+				try {
+					call_user_func([$this, 'validate' . $attribute], $value);
+					$this->validatedOn[] = 'validate' . $attribute;
+				} catch (InvalidInput $e) {
+					$this->setError($e, $key);
+					$this->isValid = false;
+				} catch (InvalidCodeAlert $e) {
+					$this->setCodeAlert($e, $key);
+					error_log($e);
+				} 
 			}
+		}
 	}
 
 	/**

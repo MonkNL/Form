@@ -234,10 +234,10 @@ class Input {
 	 */
 	private function filterVar($value, $filter) {
 			if (empty($element['value'])) {
-					throw new InvalidCodeAlert(__("No value"));
+					throw new InvalidCodeAlert(_("No value"));
 			}
 			if (filter_var($element['value'], $filter) === false) {
-					throw new InvalidInput(__("Invalid value"));
+					throw new InvalidInput(_("Invalid value"));
 			}
 			return true;
 	}
@@ -265,13 +265,13 @@ class Input {
 					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"pattern"));
 			}
 			if (empty($value)) {
-					throw new InvalidCodeAlert(__("No value"));
+					throw new InvalidCodeAlert(_("No value"));
 			}
 			if (empty($this->getAttribute($pattern))) {
-					throw new InvalidCodeAlert(__("No %s attribute value", "pattern"));
+					throw new InvalidCodeAlert(_("No %s attribute value", "pattern"));
 			}
 			if (filter_var($value, FILTER_VALIDATE_REGEXP, ["options" => ["regexp" => "/^" . $this->getAttribute('pattern') . "$/"]]) === false) {
-					throw new InvalidInput(__("Value doesn't match pattern"));
+					throw new InvalidInput(_("Value doesn't match pattern"));
 			}
 			return true;
 	}
@@ -287,25 +287,25 @@ class Input {
 					return true;
 			}
 			if (empty($value)) {
-					throw new InvalidCodeAlert(__("No value"));
+					throw new InvalidCodeAlert(_("No value"));
 					return true;
 			}
 			if (in_array($this->getInputType(), ['range', 'number'])) {
 					if ($value < $this->getAttribute('min')) {
-							throw new InvalidInput(__("Value lower than required minimum"));
+							throw new InvalidInput(_("Value lower than required minimum"));
 							return false;
 					}
 			} else {
 					if (preg_match($this->regex[$this->getInputType()], $this->getAttribute('min')) == false || strtotime($this->getAttribute('min'))) {
-							throw new InvalidCodeAlert(__("Invalid Attribute value"));
+							throw new InvalidCodeAlert(_("Invalid Attribute value"));
 							return true;
 					}
 					if (preg_match($this->regex[$this->getInputType()], $value) == false || strtotime($value) == false) {
-							throw new InvalidInput(__("Value has an invalid format"));
+							throw new InvalidInput(_("Value has an invalid format"));
 							return false;
 					}
 					if (strtotime($value) < strtotime($this->getAttribute('min'))) {
-							throw new InvalidInput(__("Value lower than required minimum"));
+							throw new InvalidInput(_("Value lower than required minimum"));
 							return false;
 					}
 			}
@@ -334,7 +334,7 @@ class Input {
 					return true;
 			}
 			if (empty($value)) {
-					throw new InvalidInput(__("Input is required"));
+					throw new InvalidInput(_("Input is required"));
 					return false;
 			}
 			return true;
@@ -368,15 +368,15 @@ class Input {
 			return true;
 		}
 		if(empty($value)){
-			throw new InvalidCodeAlert(__("No value"));
+			throw new InvalidCodeAlert(_("No value"));
 			return true;
 		}
 		if(filter_var($this->getAttribute('minlength'), FILTER_VALIDATE_INT) === false){
-			throw new InvalidCodeAlert(__("Invalid attribute value"));
+			throw new InvalidCodeAlert(_("Invalid attribute value"));
 			return true;
 		}
 		if(mb_strlen($value) < $this->getAttribute('minlength')){
-			throw new InvalidInput(__('Value is shorter than minimum required length'));
+			throw new InvalidInput(_('Value is shorter than minimum required length'));
 			return false;
 		}
 	}
@@ -392,35 +392,35 @@ class Input {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Maxlength"));
 		}
 		if(empty($value)){
-			throw new InvalidCodeAlert(__("No value"));
+			throw new InvalidCodeAlert(_("No value"));
 		}
 		if(filter_var($this->getAttribute('maxlength'), FILTER_VALIDATE_INT) === false){
 			return true;
 		}
 		if(mb_strlen($value) > $this->getAttribute('maxlength')){
-			throw new InvalidInput(__('Value is longer than the maximum permitted length'));
+			throw new InvalidInput(_('Value is longer than the maximum permitted length'));
 		}
 	}
 	private function validateFile($value){
 		switch($value['error']){
 			case UPLOAD_ERR_INI_SIZE: 	
-				throw new InvalidInput(__('File exceeds max size in php.ini'));		
+				throw new InvalidInput(_('File exceeds max size in php.ini'));		
 				return false;
 				break;
 			case UPLOAD_ERR_PARTIAL:		
-				throw new InvalidInput(__('File exceeds max size in html form'));		
+				throw new InvalidInput(_('File exceeds max size in html form'));		
 				return false;
 				break;
 			case UPLOAD_ERR_NO_FILE: 		
-				throw new InvalidInput(__('File No file was uploaded'));						
+				throw new InvalidInput(_('File No file was uploaded'));						
 				return false;
 				break;
 			case UPLOAD_ERR_NO_TMP_DIR:	
-				throw new InvalidInput(__('No /tmp dir to write to'));
+				throw new InvalidInput(_('No /tmp dir to write to'));
 				return false;
 				break;
 			case UPLOAD_ERR_CANT_WRITE:	
-				throw new InvalidInput(__('File:: Error writing to disk'));
+				throw new InvalidInput(_('File:: Error writing to disk'));
 				return false;
 				break;
 			default:

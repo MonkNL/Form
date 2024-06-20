@@ -2,7 +2,7 @@
 namespace Forms;
 
 class Form{
-    private $method = 'get',$elements = [],$isValid;
+    private $method = 'get',$elements = [],$isValid,$errors=[];
     function __construct(string $name, string $method = 'get') {
         $this->setMethod($method);
 	}
@@ -49,12 +49,17 @@ class Form{
             if($element->valid()){
                 continue;
             }
-            $element->getError();
+            $this->addError($element->getError());
 			$this->isValid = false;
 		}
 		return $this->isValid;
 	}
-	
+    function addError($error){
+        $this->errors[] = $error;
+    }
+	function getErrors(){
+        return $this->errors;
+    }
 	function valid(){
 		return $this->validate();
 	}

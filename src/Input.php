@@ -130,7 +130,11 @@ class Input {
 	 * @return string|false - Type attribute if exists, false otherwise.
 	 */
 	function getInputType() {
-		return $this->attributes['type'] ?? false;
+		$type = $this->getAttribute('type');
+		if(is_string($type)){
+			return mb_strtolower($type);
+		}
+		return  $type;
 	}
 
 	/**
@@ -140,6 +144,9 @@ class Input {
 	function getValue() {
 		$method = ($this->method == 'post') ? $_POST : $_GET;
 		$method = ($this->getInputType() == 'file') ? $_FILES : $method;
+		if($this->getInputType() == 'file'){
+			echo 'LADIES AND GENTLEMEN WE GOT HIM';
+		}
 		if (!$this->isArray()) {
 			if (!isset($method[$this->getName()])) {
 			return null;
@@ -425,31 +432,31 @@ class Input {
 	}
 	}
 	private function validateFile($value){
-		print_r($value);
-	switch($value['error']){
-		case UPLOAD_ERR_INI_SIZE: 	
-		throw new InvalidInput(_('File exceeds max size in php.ini'));	
-		return false;
-		break;
-		case UPLOAD_ERR_PARTIAL:	
-		throw new InvalidInput(_('File exceeds max size in html form'));	
-		return false;
-		break;
-		case UPLOAD_ERR_NO_FILE: 	
-		throw new InvalidInput(_('File No file was uploaded'));			
-		return false;
-		break;
-		case UPLOAD_ERR_NO_TMP_DIR:	
-		throw new InvalidInput(_('No /tmp dir to write to'));
-		return false;
-		break;
-		case UPLOAD_ERR_CANT_WRITE:	
-		throw new InvalidInput(_('File:: Error writing to disk'));
-		return false;
-		break;
-		default:
-		return true;
-	}
+	
+		switch($value['error']){
+			case UPLOAD_ERR_INI_SIZE: 	
+			throw new InvalidInput(_('File exceeds max size in php.ini'));	
+			return false;
+			break;
+			case UPLOAD_ERR_PARTIAL:	
+			throw new InvalidInput(_('File exceeds max size in html form'));	
+			return false;
+			break;
+			case UPLOAD_ERR_NO_FILE: 	
+			throw new InvalidInput(_('File No file was uploaded'));			
+			return false;
+			break;
+			case UPLOAD_ERR_NO_TMP_DIR:	
+			throw new InvalidInput(_('No /tmp dir to write to'));
+			return false;
+			break;
+			case UPLOAD_ERR_CANT_WRITE:	
+			throw new InvalidInput(_('File:: Error writing to disk'));
+			return false;
+			break;
+			default:
+			return true;
+		}
 	}
 	/**
 	 * Validate the 'required' attribute for specific input types.

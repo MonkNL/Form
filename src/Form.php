@@ -49,7 +49,7 @@ class Form{
             if($element->valid()){
                 continue;
             }
-            $this->addError($element->getError());
+            $this->addError($element->error());
 			$this->isValid = false;
 		}
 		return $this->isValid;

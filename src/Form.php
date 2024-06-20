@@ -41,6 +41,7 @@ class Form{
     }
 
     function validate(){
+        $this->isValid = true;
 	    $elements = $this->getElements();
 	    foreach($this->elements as $element){
             if(!in_array($element->getType(),['input','select','textarea'])){

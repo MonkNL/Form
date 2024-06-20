@@ -28,7 +28,6 @@ class Input {
 	 * @return void
 	 */
 	function __construct(string $method = 'get') {
-		$this->tagName = $element->tagName;
 		$this->setMethod($method);
 		$this->getAttributes();
 	}

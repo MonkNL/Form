@@ -16,11 +16,11 @@ class Form{
         return $this->$elements;
     }
     public function decodeHTML(string $html){
-        $dom = new DOMDocument();
+        $dom = new \DOMDocument();
         libxml_use_internal_errors(true);
         $dom->loadHTML($html);
         libxml_use_internal_errors(false);
-        $xpath 			= new DOMXpath($dom);
+        $xpath 			= new \DOMXpath($dom);
         $elements		= $xpath->query('//form | //label | //input | //select | //textarea | //button');
         
         foreach ($elements as $element) {

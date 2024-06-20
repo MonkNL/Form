@@ -152,6 +152,7 @@ class Input {
 	 * @return void
 	 */
 	private function setError($e, $key = null): void {
+		echo $e->getMessage();
 		if (!$this->isArray()) {
 			$this->error[] = $e->getMessage();
 			return;
@@ -168,6 +169,7 @@ class Input {
 	 * @return void
 	 */
 	private function setCodeAlert($e, $key = null): void {
+		echo $e->getMessage();
 		error_log($e);
 		if (!$this->isArray()) {
 			$this->codeAlerts[] = $e->getMessage();

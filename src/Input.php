@@ -1,12 +1,18 @@
 <?php
 namespace Forms;
+
+// Exception class for invalid input
 class InvalidInput extends \Exception { }
+
+// Exception class for invalid code alerts
 class InvalidCodeAlert extends \Exception { }
+
 class Input {
 	private $type, $method;
 	private $isValid = true, $error = [],$codeAlerts = [], $validatedOn = [];
 	public $attributes = [];
 
+	// Regular expressions for various input types
 	private $regex = [
 		'time' => '/^(?<hours>[0-1]?[0-9]|2[0-3]):(?<minutes>[0-5][0-9])$/',
 		'week' => '/^(?<year>[0-9]{4})-W(?<week>[0-4]?[0-9]|5[0-3])$/',
@@ -14,6 +20,7 @@ class Input {
 		'datetime-local' => '/^(?<year>[0-9]{4})-(?<month>0?[0-9]|1[0-2])-(?<day>[0-2]?[0-9]|3[0-2])T[0-9]{2}:[0-9]{2}$/',
 	];
 
+	// Formats for various input types
 	private $format = [
 		'time' => 'H:i',
 		'week' => 'Y-WW',
@@ -23,26 +30,40 @@ class Input {
 
 	/**
 	 * Constructor for Input class.
-	 * @param object $element - HTML element object.
 	 * @param string $method - HTTP method ('get' or 'post').
 	 * @return void
 	 */
 	function __construct(string $method = 'get') {
 		$this->setMethod($method);
 	}
+
+	/**
+	 * Import an object into the Input class.
+	 * @param object $element - HTML element object.
+	 * @return Input - An instance of the Input class.
+	 */
 	static function importObject(object $element) {
 		$input = new self();
 		$input->type = $element->tagName;
 		$input->getAttributesFromObject($element);
 		return $input;
 	}
+
+	/**
+	 * Set attributes for the input.
+	 * @param array $attributes - Array of attributes.
+	 * @return void
+	 */
+	public function setAttributes(array $attributes) {
+		$this->attributes = array_change_key_case($attributes, CASE_LOWER);
+	}
+
 	/**
 	 * Set the HTTP method for the input.
 	 * @param string $method - HTTP method ('get' or 'post').
 	 * @return void
 	 */
 	function setMethod(string $method):void {
-
 		$this->method = mb_strtolower($method);
 	}
 
@@ -121,13 +142,13 @@ class Input {
 		$method = ($this->getInputType() == 'file') ? $_FILES : $method;
 		if (!$this->isArray()) {
 			if (!isset($method[$this->getName()])) {
-				return null;
+			return null;
 			}
 			return $method[$this->getName()];
 		}
 
 		return $method[$this->getName()];
-		
+	
 	}
 
 	/**
@@ -161,8 +182,9 @@ class Input {
 		}
 		$this->error[$key][] = $e->getMessage();
 	}
+
 	/**
-	 * Set error for the invalide code.
+	 * Set error for the invalid code.
 	 * @param Exception $e - Exception object.
 	 * @param int|null $key - Specific key for array inputs.
 	 * @return void
@@ -178,6 +200,7 @@ class Input {
 		}
 		$this->codeAlerts[$key][] = $e->getMessage();
 	}
+
 	/* validator helpers */
 
 	/**
@@ -203,16 +226,16 @@ class Input {
 	private function validateMethods($value, $key = 0) {
 		foreach ($this->attributes as $attribute => $attribute_value) {
 			if (method_exists($this, 'validate' . $attribute)) {
-				try {
-					call_user_func([$this, 'validate' . $attribute], $value);
-					$this->validatedOn[] = 'validate' . $attribute;
-				} catch (InvalidInput $e) {
-					$this->setError($e, $key);
-					$this->isValid = false;
-				} catch (InvalidCodeAlert $e) {
-					$this->setCodeAlert($e, $key);
+			try {
+				call_user_func([$this, 'validate' . $attribute], $value);
+				$this->validatedOn[] = 'validate' . $attribute;
+			} catch (InvalidInput $e) {
+				$this->setError($e, $key);
+				$this->isValid = false;
+			} catch (InvalidCodeAlert $e) {
+				$this->setCodeAlert($e, $key);
 			
-				} 
+			} 
 			}
 		}
 	}
@@ -222,8 +245,8 @@ class Input {
 	 * @return bool - True if all validations are successful, false otherwise.
 	 */
 	public function valid() {
-			$this->validate();
-			return $this->isValid;
+		$this->validate();
+		return $this->isValid;
 	}
 
 	/**
@@ -233,13 +256,13 @@ class Input {
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
 	private function filterVar($value, $filter) {
-			if (empty($element['value'])) {
-					throw new InvalidCodeAlert(_("No value"));
-			}
-			if (filter_var($element['value'], $filter) === false) {
-					throw new InvalidInput(_("Invalid value"));
-			}
-			return true;
+		if (empty($element['value'])) {
+			throw new InvalidCodeAlert(_("No value"));
+		}
+		if (filter_var($element['value'], $filter) === false) {
+			throw new InvalidInput(_("Invalid value"));
+		}
+		return true;
 	}
 
 	/* attributes validation */
@@ -250,9 +273,9 @@ class Input {
 	 * @return void
 	 */
 	private function validateAccept($value) {
-			if ($this->getInputType() != 'file') {
-					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Accept"));
-			}
+		if ($this->getInputType() != 'file') {
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Accept"));
+		}
 	}
 
 	/**
@@ -261,19 +284,19 @@ class Input {
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
 	private function validatePattern($value) {
-			if (!in_array($this->getInputType(), ['text', 'search', 'url', 'tel', 'email', 'password'])) {
-					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"pattern"));
-			}
-			if (empty($value)) {
-					throw new InvalidCodeAlert(_("No value"));
-			}
-			if (empty($this->getAttribute($pattern))) {
-					throw new InvalidCodeAlert(_("No %s attribute value", "pattern"));
-			}
-			if (filter_var($value, FILTER_VALIDATE_REGEXP, ["options" => ["regexp" => "/^" . $this->getAttribute('pattern') . "$/"]]) === false) {
-					throw new InvalidInput(_("Value doesn't match pattern"));
-			}
-			return true;
+		if (!in_array($this->getInputType(), ['text', 'search', 'url', 'tel', 'email', 'password'])) {
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"pattern"));
+		}
+		if (empty($value)) {
+			throw new InvalidCodeAlert(_("No value"));
+		}
+		if (empty($this->getAttribute($pattern))) {
+			throw new InvalidCodeAlert(_("No %s attribute value", "pattern"));
+		}
+		if (filter_var($value, FILTER_VALIDATE_REGEXP, ["options" => ["regexp" => "/^" . $this->getAttribute('pattern') . "$/"]]) === false) {
+			throw new InvalidInput(_("Value doesn't match pattern"));
+		}
+		return true;
 	}
 
 	/**
@@ -282,34 +305,34 @@ class Input {
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
 	private function validateMin($value) {
-			if (!in_array($this->getInputType(), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
-					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Min"));
-					return true;
-			}
-			if (empty($value)) {
-					throw new InvalidCodeAlert(_("No value"));
-					return true;
-			}
-			if (in_array($this->getInputType(), ['range', 'number'])) {
-					if ($value < $this->getAttribute('min')) {
-							throw new InvalidInput(_("Value lower than required minimum"));
-							return false;
-					}
-			} else {
-					if (preg_match($this->regex[$this->getInputType()], $this->getAttribute('min')) == false || strtotime($this->getAttribute('min'))) {
-							throw new InvalidCodeAlert(_("Invalid Attribute value"));
-							return true;
-					}
-					if (preg_match($this->regex[$this->getInputType()], $value) == false || strtotime($value) == false) {
-							throw new InvalidInput(_("Value has an invalid format"));
-							return false;
-					}
-					if (strtotime($value) < strtotime($this->getAttribute('min'))) {
-							throw new InvalidInput(_("Value lower than required minimum"));
-							return false;
-					}
-			}
+		if (!in_array($this->getInputType(), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Min"));
 			return true;
+		}
+		if (empty($value)) {
+			throw new InvalidCodeAlert(_("No value"));
+			return true;
+		}
+		if (in_array($this->getInputType(), ['range', 'number'])) {
+			if ($value < $this->getAttribute('min')) {
+				throw new InvalidInput(_("Value lower than required minimum"));
+				return false;
+			}
+		} else {
+			if (preg_match($this->regex[$this->getInputType()], $this->getAttribute('min')) == false || strtotime($this->getAttribute('min'))) {
+				throw new InvalidCodeAlert(_("Invalid Attribute value"));
+				return true;
+			}
+			if (preg_match($this->regex[$this->getInputType()], $value) == false || strtotime($value) == false) {
+				throw new InvalidInput(_("Value has an invalid format"));
+				return false;
+			}
+			if (strtotime($value) < strtotime($this->getAttribute('min'))) {
+				throw new InvalidInput(_("Value lower than required minimum"));
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -318,9 +341,9 @@ class Input {
 	 * @return void
 	 */
 	private function validateMax($value) {
-			if (!in_array($this->getAttribute('type'), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
-					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Max"));
-			}
+		if (!in_array($this->getAttribute('type'), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Max"));
+		}
 	}
 
 	/**
@@ -329,105 +352,105 @@ class Input {
 	 * @return void
 	 */
 	private function validateRequired($value) {
-			if ($this->type != 'textarea' && $this->type != 'select' && !in_array($this->getAttribute('type'), ['text', 'search', 'url', 'tel', 'email', 'password', 'checkbox'])) {
-					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Required"));
-					return true;
-			}
-			if (empty($value)) {
-					throw new InvalidInput(_("Input is required"));
-					return false;
-			}
+		if ($this->type != 'textarea' && $this->type != 'select' && !in_array($this->getAttribute('type'), ['text', 'search', 'url', 'tel', 'email', 'password', 'checkbox'])) {
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Required"));
 			return true;
+		}
+		if (empty($value)) {
+			throw new InvalidInput(_("Input is required"));
+			return false;
+		}
+		return true;
 	}
-		/**
+	/**
 	 * Validate the 'required' attribute for specific input types.
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
 	private function validateStep($value){
 	
-		#date	An integer number of days
-		#month	An integer number of months
-		#week	An integer number of weeks
-		#datetime-local, time	An integer number of seconds
-		#range, number	An integer
-		if(!in_array($this->getAttribute('type'),['date','month', 'week','datetime-local','range'])){
-			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Step"));
-		}
+	#date	An integer number of days
+	#month	An integer number of months
+	#week	An integer number of weeks
+	#datetime-local, time	An integer number of seconds
+	#range, number	An integer
+	if(!in_array($this->getAttribute('type'),['date','month', 'week','datetime-local','range'])){
+		throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Step"));
 	}
-		/**
+	}
+	/**
 	 * Validate the 'required' attribute for specific input types.
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
 	private function validateMinlength($value){
-		
-		#text, search, url, tel, email, password; also on the <textarea> element
-		if($this->type != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
-			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Minlength"));
-			return true;
-		}
-		if(empty($value)){
-			throw new InvalidCodeAlert(_("No value"));
-			return true;
-		}
-		if(filter_var($this->getAttribute('minlength'), FILTER_VALIDATE_INT) === false){
-			throw new InvalidCodeAlert(_("Invalid attribute value"));
-			return true;
-		}
-		if(mb_strlen($value) < $this->getAttribute('minlength')){
-			throw new InvalidInput(_('Value is shorter than minimum required length'));
-			return false;
-		}
+	
+	#text, search, url, tel, email, password; also on the <textarea> element
+	if($this->type != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
+		throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Minlength"));
+		return true;
 	}
-		/**
+	if(empty($value)){
+		throw new InvalidCodeAlert(_("No value"));
+		return true;
+	}
+	if(filter_var($this->getAttribute('minlength'), FILTER_VALIDATE_INT) === false){
+		throw new InvalidCodeAlert(_("Invalid attribute value"));
+		return true;
+	}
+	if(mb_strlen($value) < $this->getAttribute('minlength')){
+		throw new InvalidInput(_('Value is shorter than minimum required length'));
+		return false;
+	}
+	}
+	/**
 	 * Validate the 'required' attribute for specific input types.
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
 	private function validateMaxlength($value){
-		
-		#text, search, url, tel, email, password; also on the <textarea> element
-		if($this->type != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
-			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Maxlength"));
-		}
-		if(empty($value)){
-			throw new InvalidCodeAlert(_("No value"));
-		}
-		if(filter_var($this->getAttribute('maxlength'), FILTER_VALIDATE_INT) === false){
-			return true;
-		}
-		if(mb_strlen($value) > $this->getAttribute('maxlength')){
-			throw new InvalidInput(_('Value is longer than the maximum permitted length'));
-		}
+	
+	#text, search, url, tel, email, password; also on the <textarea> element
+	if($this->type != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
+		throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Maxlength"));
+	}
+	if(empty($value)){
+		throw new InvalidCodeAlert(_("No value"));
+	}
+	if(filter_var($this->getAttribute('maxlength'), FILTER_VALIDATE_INT) === false){
+		return true;
+	}
+	if(mb_strlen($value) > $this->getAttribute('maxlength')){
+		throw new InvalidInput(_('Value is longer than the maximum permitted length'));
+	}
 	}
 	private function validateFile($value){
-		switch($value['error']){
-			case UPLOAD_ERR_INI_SIZE: 	
-				throw new InvalidInput(_('File exceeds max size in php.ini'));		
-				return false;
-				break;
-			case UPLOAD_ERR_PARTIAL:		
-				throw new InvalidInput(_('File exceeds max size in html form'));		
-				return false;
-				break;
-			case UPLOAD_ERR_NO_FILE: 		
-				throw new InvalidInput(_('File No file was uploaded'));						
-				return false;
-				break;
-			case UPLOAD_ERR_NO_TMP_DIR:	
-				throw new InvalidInput(_('No /tmp dir to write to'));
-				return false;
-				break;
-			case UPLOAD_ERR_CANT_WRITE:	
-				throw new InvalidInput(_('File:: Error writing to disk'));
-				return false;
-				break;
-			default:
-			return true;
-		}
+	switch($value['error']){
+		case UPLOAD_ERR_INI_SIZE: 	
+		throw new InvalidInput(_('File exceeds max size in php.ini'));	
+		return false;
+		break;
+		case UPLOAD_ERR_PARTIAL:	
+		throw new InvalidInput(_('File exceeds max size in html form'));	
+		return false;
+		break;
+		case UPLOAD_ERR_NO_FILE: 	
+		throw new InvalidInput(_('File No file was uploaded'));			
+		return false;
+		break;
+		case UPLOAD_ERR_NO_TMP_DIR:	
+		throw new InvalidInput(_('No /tmp dir to write to'));
+		return false;
+		break;
+		case UPLOAD_ERR_CANT_WRITE:	
+		throw new InvalidInput(_('File:: Error writing to disk'));
+		return false;
+		break;
+		default:
+		return true;
 	}
-		/**
+	}
+	/**
 	 * Validate the 'required' attribute for specific input types.
 	 * @param mixed $value - Input value.
 	 * @return void
@@ -442,13 +465,13 @@ class Input {
 		*/
 		switch($this->getAttribute('type')){
 			case 'email':
-				return $this->filterVar($value,FILTER_VALIDATE_EMAIL);
+			return $this->filterVar($value,FILTER_VALIDATE_EMAIL);
 			break;
 			case 'file':
-				return $this->validateFile($value,FILTER_VALIDATE_EMAIL);
+			return $this->validateFile($value,FILTER_VALIDATE_EMAIL);
 			break;
 			default:
-				return true;
+			return true;
 		}
 	}
 }

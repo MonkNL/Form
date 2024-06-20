@@ -39,9 +39,7 @@ class Form{
     private function addObject($element){
        $this->elements[] = $element;
     }
-    private function getElements(){
-        return $this->elements;
-    }
+
     function validate(){
 	    $elements = $this->getElements();
 	    foreach($this->elements as $element){

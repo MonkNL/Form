@@ -280,6 +280,27 @@ class Input {
 		if ($this->getInputType() != 'file') {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Accept"));
 		}
+		$fileInfo 		= finfo_open(FILEINFO_MIME_TYPE);
+		$detectedType 	= finfo_file( $fileInfo, $value['tmp_name']);
+		$acceptedTypes	= $this->getAttribute('accept'); 
+		$accepted 		= false;
+		foreach (explode(',',$acceptedTypes ) as $type) {
+			$type = trim($type); // remove any whitespace
+			if (
+				$type == $detectedType || 
+				$type === strstr($detectedType, '/', true) . '/*' ||
+				$type == '.' . pathinfo($value['name'], PATHINFO_EXTENSION)
+			){
+				$accepted= true;
+			}
+
+		}
+		if($accepted){
+			return true;
+		}
+		throw new InvalidInputsprintf(_("The file type `%s` is not supported. Only these types are supported: %s"), $detected_type, $this->getAttribute('accept')));
+		return false;
+		
 	}
 
 	/**

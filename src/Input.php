@@ -425,6 +425,7 @@ class Input {
 	}
 	}
 	private function validateFile($value){
+		print_r($value);
 	switch($value['error']){
 		case UPLOAD_ERR_INI_SIZE: 	
 		throw new InvalidInput(_('File exceeds max size in php.ini'));	

@@ -2,7 +2,7 @@
 namespace Forms;
 
 class Form{
-    private $method = 'get',$elements = [];
+    private $method = 'get',$elements = [],$isValid;
     function __construct(string $name, string $method = 'get') {
         $this->setMethod($method);
 	}

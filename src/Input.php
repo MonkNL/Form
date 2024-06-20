@@ -2,10 +2,9 @@
 namespace Forms;
 class InvalidInput extends \Exception { }
 class InvalidCodeAlert extends \Exception { }
-
 class Input {
 	private $type, $method;
-	private $isValid = true, $error = [], $validatedOn = [];
+	private $isValid = true, $error = [],$codeAlerts = [], $validatedOn = [];
 	public $attributes = [];
 
 	private $regex = [
@@ -43,7 +42,8 @@ class Input {
 	 * @param string $method - HTTP method ('get' or 'post').
 	 * @return void
 	 */
-	function setMethod($method) {
+	function setMethod(string $method):void {
+
 		$this->method = mb_strtolower($method);
 	}
 
@@ -126,6 +126,9 @@ class Input {
 			}
 			return $method[$this->getName()];
 		}
+
+		return $method[$this->getName()];
+		
 	}
 
 	/**
@@ -159,7 +162,23 @@ class Input {
 		}
 		$this->error[$key][] = $e->getMessage();
 	}
-
+	/**
+	 * Set error for the invalide code.
+	 * @param Exception $e - Exception object.
+	 * @param int|null $key - Specific key for array inputs.
+	 * @return void
+	 */
+	private function setCodeAlert($e, $key = null): void {
+		error_log($e);
+		if (!$this->isArray()) {
+			$this->codeAlerts[] = $e->getMessage();
+			return;
+		}
+		if (!isset($this->codeAlerts[$key])) {
+			$this->codeAlerts[$key] = [];
+		}
+		$this->codeAlerts[$key][] = $e->getMessage();
+	}
 	/* validator helpers */
 
 	/**
@@ -172,7 +191,7 @@ class Input {
 			$this->validateMethods('');
 		}
 		foreach ($values as $key => $value) {
-				$this->validateMethods($value, $key);
+			$this->validateMethods($value, $key);
 		}
 	}
 
@@ -193,7 +212,7 @@ class Input {
 					$this->isValid = false;
 				} catch (InvalidCodeAlert $e) {
 					$this->setCodeAlert($e, $key);
-					error_log($e);
+			
 				} 
 			}
 		}

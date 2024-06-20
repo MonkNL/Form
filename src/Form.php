@@ -25,7 +25,7 @@ class Form{
         
         foreach ($elements as $element) {
             if($element->tagName != 'form'){
-                $this->addObject(Input::addInput($element,$this->method));
+                $this->getAttributesFromObject(Input::addInput($element,$this->method));
                 continue;
             }
             if($element->getAttribute('method') != ""){

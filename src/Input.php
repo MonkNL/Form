@@ -35,6 +35,7 @@ class Input {
 		$input = new self();
 		$input->type = $element->tagName;
 		$input->getAttributesFromObject($element);
+		return $input;
 	}
 	/**
 	 * Set the HTTP method for the input.

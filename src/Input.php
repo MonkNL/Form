@@ -88,7 +88,7 @@ class Input {
 		}
 		foreach ($element->attributes as $attribute) {
 			$name = mb_strtolower($attribute->nodeName);
-			$value = $ttribute->nodeValue;
+			$value = $attribute->nodeValue;
 			$this->attributes[$name] = $value;
 		}
 		return $this->attributes;

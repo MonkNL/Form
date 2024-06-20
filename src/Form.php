@@ -13,7 +13,7 @@ class Form{
         $elements = $input;
     }
     public function getElements(){
-        return $this->$elements;
+        return $this->elements;
     }
     public function decodeHTML(string $html){
         $dom = new \DOMDocument();

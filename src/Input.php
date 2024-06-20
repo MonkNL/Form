@@ -329,7 +329,7 @@ class Input {
 	 * @return void
 	 */
 	private function validateRequired($value) {
-			if ($this->tagName != 'textarea' && $this->tagName != 'select' && !in_array($this->getAttribute('type'), ['text', 'search', 'url', 'tel', 'email', 'password', 'checkbox'])) {
+			if ($this->type != 'textarea' && $this->type != 'select' && !in_array($this->getAttribute('type'), ['text', 'search', 'url', 'tel', 'email', 'password', 'checkbox'])) {
 					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Required"));
 					return true;
 			}
@@ -363,7 +363,7 @@ class Input {
 	private function validateMinlength($value){
 		
 		#text, search, url, tel, email, password; also on the <textarea> element
-		if($this->tagName != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
+		if($this->type != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Minlength"));
 			return true;
 		}
@@ -388,7 +388,7 @@ class Input {
 	private function validateMaxlength($value){
 		
 		#text, search, url, tel, email, password; also on the <textarea> element
-		if($this->tagName != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
+		if($this->type != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Maxlength"));
 		}
 		if(empty($value)){

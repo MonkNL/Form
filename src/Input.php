@@ -109,7 +109,7 @@ class Input {
 	 * Get the type attribute of the input.
 	 * @return string|false - Type attribute if exists, false otherwise.
 	 */
-	function getType() {
+	function getInputType() {
 		return $this->attributes['type'] ?? false;
 	}
 
@@ -119,7 +119,7 @@ class Input {
 	 */
 	function getValue() {
 		$method = ($this->method == 'post') ? $_POST : $_GET;
-		$method = ($this->getType() == 'file') ? $_FILES : $method;
+		$method = ($this->getInputType() == 'file') ? $_FILES : $method;
 		if (!$this->isArray()) {
 			if (!isset($method[$this->getName()])) {
 				return null;
@@ -251,8 +251,8 @@ class Input {
 	 * @return void
 	 */
 	private function validateAccept($value) {
-			if ($this->getType() != 'file') {
-					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Accept"));
+			if ($this->getInputType() != 'file') {
+					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Accept"));
 			}
 	}
 
@@ -262,8 +262,8 @@ class Input {
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
 	private function validatePattern($value) {
-			if (!in_array($this->getType(), ['text', 'search', 'url', 'tel', 'email', 'password'])) {
-					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"pattern"));
+			if (!in_array($this->getInputType(), ['text', 'search', 'url', 'tel', 'email', 'password'])) {
+					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"pattern"));
 			}
 			if (empty($value)) {
 					throw new InvalidCodeAlert(__("No value"));
@@ -283,25 +283,25 @@ class Input {
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
 	private function validateMin($value) {
-			if (!in_array($this->getType(), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
-					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Min"));
+			if (!in_array($this->getInputType(), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
+					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Min"));
 					return true;
 			}
 			if (empty($value)) {
 					throw new InvalidCodeAlert(__("No value"));
 					return true;
 			}
-			if (in_array($this->getType(), ['range', 'number'])) {
+			if (in_array($this->getInputType(), ['range', 'number'])) {
 					if ($value < $this->getAttribute('min')) {
 							throw new InvalidInput(__("Value lower than required minimum"));
 							return false;
 					}
 			} else {
-					if (preg_match($this->regex[$this->getType()], $this->getAttribute('min')) == false || strtotime($this->getAttribute('min'))) {
+					if (preg_match($this->regex[$this->getInputType()], $this->getAttribute('min')) == false || strtotime($this->getAttribute('min'))) {
 							throw new InvalidCodeAlert(__("Invalid Attribute value"));
 							return true;
 					}
-					if (preg_match($this->regex[$this->getType()], $value) == false || strtotime($value) == false) {
+					if (preg_match($this->regex[$this->getInputType()], $value) == false || strtotime($value) == false) {
 							throw new InvalidInput(__("Value has an invalid format"));
 							return false;
 					}
@@ -320,7 +320,7 @@ class Input {
 	 */
 	private function validateMax($value) {
 			if (!in_array($this->getAttribute('type'), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
-					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Max"));
+					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Max"));
 			}
 	}
 
@@ -331,7 +331,7 @@ class Input {
 	 */
 	private function validateRequired($value) {
 			if ($this->tagName != 'textarea' && $this->tagName != 'select' && !in_array($this->getAttribute('type'), ['text', 'search', 'url', 'tel', 'email', 'password', 'checkbox'])) {
-					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Required"));
+					throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Required"));
 					return true;
 			}
 			if (empty($value)) {
@@ -353,7 +353,7 @@ class Input {
 		#datetime-local, time	An integer number of seconds
 		#range, number	An integer
 		if(!in_array($this->getAttribute('type'),['date','month', 'week','datetime-local','range'])){
-			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Step"));
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Step"));
 		}
 	}
 		/**
@@ -365,7 +365,7 @@ class Input {
 		
 		#text, search, url, tel, email, password; also on the <textarea> element
 		if($this->tagName != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
-			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Minlength"));
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Minlength"));
 			return true;
 		}
 		if(empty($value)){
@@ -390,7 +390,7 @@ class Input {
 		
 		#text, search, url, tel, email, password; also on the <textarea> element
 		if($this->tagName != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
-			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getType(),"Maxlength"));
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Maxlength"));
 		}
 		if(empty($value)){
 			throw new InvalidCodeAlert(__("No value"));

@@ -145,7 +145,13 @@ class Input {
 		$method = ($this->method == 'post') ? $_POST : $_GET;
 		$method = ($this->getInputType() == 'file') ? $_FILES : $method;
 		if($this->getInputType() == 'file'){
+		
 			echo 'LADIES AND GENTLEMEN WE GOT HIM';
+			if(!isset($method[$this->getName()])){
+				echo 'ooh no';
+			}else{
+				echo 'still got him';
+			}
 		}
 		if (!$this->isArray()) {
 			if (!isset($method[$this->getName()])) {

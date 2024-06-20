@@ -93,7 +93,7 @@ class Form{
      * @return void
      */
     function addError($name, $error){
-        $this->errors[] = $name.':'.$error;
+        $this->errors[] = $name.':'.implode(',',$error);
     }
 
     /**

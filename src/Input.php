@@ -29,7 +29,6 @@ class Input {
 	 */
 	function __construct(string $method = 'get') {
 		$this->setMethod($method);
-		$this->getAttributes();
 	}
 	static function importObject(object $element) {
 		$input = new self();

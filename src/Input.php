@@ -131,7 +131,7 @@ class Input {
 	 * Get attributes of the HTML element.
 	 * @return array|false - Array of attributes if available, false if none.
 	 */
-	private function getAttributesFromObject(DOMNode $element) {
+	private function getAttributesFromObject(\DOMElement $element) {
 		if (!$element->hasAttributes()) {
 			return false;
 		}

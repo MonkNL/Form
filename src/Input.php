@@ -73,7 +73,7 @@ class Input {
 	}
 
 	public function addOption(string $value,?string $text = null):void{
-		$this->options = ['value'=>$value,'text'=>$text];
+		$this->options[] = ['value'=>$value,'text'=>$text];
 	}
 	public function addOptionArray(array $options) :void{
 		foreach($options as $option){
@@ -565,7 +565,7 @@ class Input {
 			return false;
 		}
 	}
-	private function sizeToByte($size) {
+	private function sizeToBytes($size) {
 		$unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
 		$size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
 		if ($unit) {
@@ -587,7 +587,7 @@ class Input {
 		return round($bytes, 2) . ' ' . $units[$i];
 	}
 	private function validateFile($value) : bool{
-		if(!is_array($value) || key_exists('error',$value)){
+		if(!is_array($value) || !key_exists('error',$value)){
 			throw new InvalidInput(_('unexcepeted value'));	
 			return false;
 		}
@@ -605,9 +605,12 @@ class Input {
 				throw new InvalidInput(sprintf(_('File size of %s exceeds max size of %s'),$uploadedFileSize, $uploadMaxSize));	
 				return false;
 				break;
-			case UPLOAD_ERR_NO_FILE: 	
-				throw new InvalidInput(_('No file was uploaded'));			
-				return false;
+			case UPLOAD_ERR_NO_FILE:
+			    if($this->getAttribute('required')){
+				    throw new InvalidInput(_('No file was uploaded'));		
+				    return false;
+			    }
+			    return true;
 				break;
 			case UPLOAD_ERR_NO_TMP_DIR:	
 				throw new InvalidInput(_('No tmp dir to write to'));

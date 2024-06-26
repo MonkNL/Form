@@ -263,7 +263,7 @@ class Input {
 		}
 	}
 	private function validateTagType($value,$key =0){
-		if(method_exists($this, 'validate' . $this->getType()) {
+		if(method_exists($this, 'validate' . $this->getType())) {
 			try {
 				call_user_func([$this, 'validate' . $this->getType()], $value);
 				$this->validatedOn[] = 'validate' . $this->getType();

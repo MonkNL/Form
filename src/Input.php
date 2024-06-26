@@ -33,7 +33,7 @@ class Input {
 	 * @param string $method - HTTP method ('get' or 'post').
 	 * @return void
 	 */
-	function __construct(Form $form = null,string $method = null): object  {
+	function __construct(Form $form = null,string $method = null){
 		if(!is_null($method)){
 			$this->setMethod($form);
 		}

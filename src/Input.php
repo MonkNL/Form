@@ -251,7 +251,7 @@ class Input {
 	 * Validate input attributes.
 	 * @return void
 	 */
-	private function validate():boolean {
+	private function validate() : bool {
 		$values = (array)$this->getValue();
 		if (empty($values)) {
 			$this->validateAttributes('');
@@ -303,7 +303,7 @@ class Input {
 	 * Validate input attributes and return overall validation status.
 	 * @return bool - True if all validations are successful, false otherwise.
 	 */
-	public function valid():boolean{
+	public function valid() : bool{
 		$this->validate();
 		return $this->isValid;
 	}
@@ -314,7 +314,7 @@ class Input {
 	 * @param int $filter - Filter to apply.
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
-	private function filterVar($value, $filter):boolean{
+	private function filterVar($value, $filter) : bool{
 		if (empty($element['value'])) {
 			throw new InvalidCodeAlert(_("No value"));
 		}
@@ -325,7 +325,7 @@ class Input {
 		return true;
 	}
 	/* tagType validation */
-	private function validateSelect($value):boolean{
+	private function validateSelect($value) : bool{
 		if($this->dynamicSelect){
 			return true;
 		}
@@ -343,7 +343,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
-	private function validateAccept($value):boolean {
+	private function validateAccept($value) : bool {
 		if ($this->getInputType() != 'file') {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Accept"));
 		}
@@ -376,7 +376,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
-	private function validatePattern($value):boolean{
+	private function validatePattern($value) : bool{
 		if (!in_array($this->getInputType(), ['text', 'search', 'url', 'tel', 'email', 'password'])) {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"pattern"));
 		}
@@ -398,7 +398,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
-	private function validateMin($value):boolean{
+	private function validateMin($value) : bool{
 		if (!in_array($this->getInputType(), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Min"));
 			return true;
@@ -440,7 +440,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
-	private function validateMax($value):boolean{
+	private function validateMax($value) : bool{
 		if (!in_array($this->getInputType(), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Max"));
 		}
@@ -485,7 +485,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
-	private function validateRequired($value):boolean{
+	private function validateRequired($value) : bool{
 		if ($this->type != 'textarea' && $this->type != 'select' && !in_array($this->getInputType(), ['text', 'search', 'url', 'tel', 'email', 'password', 'checkbox'])) {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Required"));
 			return true;
@@ -501,7 +501,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
-	private function validateStep($value):boolean{
+	private function validateStep($value) : bool{
 	
 		#date	An integer number of days
 		#month	An integer number of months
@@ -517,7 +517,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
-	private function validateMinlength($value):boolean{
+	private function validateMinlength($value) : bool{
 		
 		#text, search, url, tel, email, password; also on the <textarea> element
 		if($this->type != 'textarea' && !in_array($this->getInputType(),['text', 'search', 'url', 'tel', 'email', 'password'])){
@@ -542,7 +542,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
-	private function validateMaxlength($value):boolean{
+	private function validateMaxlength($value) : bool{
 	
 		#text, search, url, tel, email, password; also on the <textarea> element
 		if($this->type != 'textarea' && !in_array($this->getInputType(),['text', 'search', 'url', 'tel', 'email', 'password'])){
@@ -580,7 +580,7 @@ class Input {
 		}
 		return round($bytes, 2) . ' ' . $units[$i];
 	};
-	private function validateFile($value):boolean{
+	private function validateFile($value) : bool{
 		if(!is_array($value) || key_exists('error',$value)){
 			throw new InvalidInput(_('unexcepeted value'));	
 			return false;
@@ -615,7 +615,7 @@ class Input {
 				return true;
 		}
 	}
-	function validateDate($value):boolean{
+	function validateDate($value) : bool{
 		if (!preg_match($this->regex[$this->getInputType()], $value)) {
 			throw new InvalidInput(_('Date is not valid according to regex'));
 			return false;
@@ -634,7 +634,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
-	private function validateType($value):boolean{
+	private function validateType($value) : bool{
 		switch($this->getInputType()){
 			case 'email':
 				return $this->filterVar($value,FILTER_VALIDATE_EMAIL);

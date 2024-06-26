@@ -329,7 +329,7 @@ class Input {
 		if($this->dynamicSelect){
 			return true;
 		}
-		$options = array_column('value',$this->options);
+		$options = array_column($this->options,'value');
 		if(!in_array($value,$options)){
 			throw new InvalidInput(_("Invalid value"));
 			return false;

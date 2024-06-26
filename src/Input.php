@@ -50,7 +50,7 @@ class Input {
 	 * @param DOMElement  $element - HTML element object.
 	 * @return Input - An instance of the Input class.
 	 */
-	static function importObject(DOMElement  $element) {
+	static function importObject(\DOMElement  $element) {
 		$input 			= new self();
 		$input->type 	= $element->tagName;
 		if($input->type  == 'select'){
@@ -64,7 +64,7 @@ class Input {
 	 * @param DOMNode $element - HTML element object.
 	 * @return void
 	 */
-	private function getOptionsFormObject(DOMNode $element):void{
+	private function getOptionsFormObject(\DOMElement $element):void{
         foreach ($element->childNodes as $child) {
         	if ($child->nodeName == 'option') {
             	$this->addOption($child->getAttribute('value'),$child->nodeValue);

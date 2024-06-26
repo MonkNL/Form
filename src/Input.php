@@ -8,7 +8,7 @@ class InvalidInput extends \Exception { }
 class InvalidCodeAlert extends \Exception { }
 
 class Input {
-	private $type, $method = null,$form = null,$options = [],$dynamicSelect = false;
+	private $type, $method = 'get',$form = null,$options = [],$dynamicSelect = false;
 	private $isValid = true, $error = [],$codeAlerts = [], $validatedOn = [];
 	public $attributes = [];
 
@@ -180,8 +180,8 @@ class Input {
 		if(!is_null($this->method)){
 			$method = ($this->method == 'post') 		? $_POST : $_GET;
 		}
-		if(!($this->form instanceof Form) || !is_null($this->form->getmethod())){
-			$method = ($this->form->getmethod() == 'post') 		? $_POST : $_GET;
+		if(($this->form instanceof Form) && !is_null($this->form->getMethod())){
+			$method = ($this->form->getMethod() == 'post') 		? $_POST : $_GET;
 		}
 		$method = ($this->getInputType() == 'file') ? $_FILES : $method;
 		if (!$this->isArray()) {

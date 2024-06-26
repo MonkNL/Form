@@ -61,6 +61,7 @@ class Form{
         foreach ($elements as $element) {
             if($element->tagName != 'form'){
                 $input  = Input::importObject($element,$this->method);
+                $input->setForm($this);
                 $this->addInput($input);
                 continue;
             }

@@ -263,7 +263,7 @@ class Input {
 			}
 		}
 		if(!$this->isArray()){
-			$values= $this->getValue();
+			$value = $this->getValue();
 			$this->validateAttributes($value);
 			$this->validateTagType($value);
 		}

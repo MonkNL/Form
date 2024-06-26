@@ -586,7 +586,7 @@ class Input {
 			return false;
 		}
 		$upload_max_filesize 	= $this->sizeToBytes(ini_get('upload_max_filesize'));
-		$post_max_size 			= $this->sizeToBytes(ini_get('post_max_size'))
+		$post_max_size 			= $this->sizeToBytes(ini_get('post_max_size'));
 		$uploadMaxSize 			= $this->readableSize(min($upload_max_filesize,$post_max_size));
 		
 		switch($value['error']){

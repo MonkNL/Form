@@ -585,7 +585,6 @@ class Input {
 			throw new InvalidInput(_('unexcepeted value'));	
 			return false;
 		}
-		$sizeToByte 
 		$upload_max_filesize 	= $this->sizeToBytes(ini_get('upload_max_filesize'));
 		$post_max_size 			= $this->sizeToBytes(ini_get('post_max_size'))
 		$uploadMaxSize 			= $this->readableSize(min($upload_max_filesize,$post_max_size));

@@ -622,7 +622,7 @@ class Input {
 	}
 	function validateDate($value) : bool{
 		if (!preg_match($this->regex[$this->getInputType()], $value)) {
-			throw new InvalidInput(_('Date is not valid according to regex ['.$this->regex[$this->getInputType()].']'));
+			throw new InvalidInput(_('Date is not valid according to regex ['.$this->regex[$this->getInputType()].']:'.$value));
 			return false;
 		}
 		$date = DateTime::createFromFormat($this->format[$this->getInputType()], $value);

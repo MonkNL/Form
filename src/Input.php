@@ -621,6 +621,10 @@ class Input {
 		}
 	}
 	function validateDate($value) : bool{
+		if(empty($value)){
+			throw new InvalidCodeAlert(_("No value"));
+			return true;
+		}
 		if (!preg_match($this->regex[$this->getInputType()], $value)) {
 			throw new InvalidInput(_('Date is not valid according to regex ['.$this->regex[$this->getInputType()].']:'.$value));
 			return false;

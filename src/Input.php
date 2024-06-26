@@ -559,7 +559,7 @@ class Input {
 			return false;
 		}
 	}
-	private $sizeToByte = function($size) {
+	private function sizeToByte($size) {
 		$unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
 		$size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
 		if ($unit) {
@@ -571,15 +571,15 @@ class Input {
 			}
 		}
 		return $size;
-	};
+	}
 
-	private $readableSize = function($bytes) {
+	private function readableSize($bytes) {
 		$units = array('B', 'KB', 'MB', 'GB', 'TB', 'PB');
 		for ($i = 0; $bytes > 1024; $i++) {
 			$bytes /= 1024;
 		}
 		return round($bytes, 2) . ' ' . $units[$i];
-	};
+	}
 	private function validateFile($value) : bool{
 		if(!is_array($value) || key_exists('error',$value)){
 			throw new InvalidInput(_('unexcepeted value'));	

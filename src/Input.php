@@ -8,7 +8,7 @@ class InvalidInput extends \Exception { }
 class InvalidCodeAlert extends \Exception { }
 
 class Input {
-	private $type, $method;
+	private $type, $method = null,$form = null,$options = [],$dynamicSelect = false;
 	private $isValid = true, $error = [],$codeAlerts = [], $validatedOn = [];
 	public $attributes = [];
 
@@ -33,28 +33,59 @@ class Input {
 	 * @param string $method - HTTP method ('get' or 'post').
 	 * @return void
 	 */
-	function __construct(string $method = 'get') {
-		$this->setMethod($method);
+	function __construct(Form $form = null,string $method = null): object  {
+		if(!is_null($method)){
+			$this->setMethod($form);
+		}
+		if(!is_null($form)){
+			$this->setForm($form);
+		}
+		return $this;
 	}
-
+	function setForm(Form $form){
+		$this->form = $form;
+	}
 	/**
 	 * Import an object into the Input class.
-	 * @param object $element - HTML element object.
+	 * @param DOMNode $element - HTML element object.
 	 * @return Input - An instance of the Input class.
 	 */
-	static function importObject(object $element) {
-		$input = new self();
-		$input->type = $element->tagName;
+	static function importObject(DOMNode $element) {
+		$input 			= new self();
+		$input->type 	= $element->tagName;
+		if($input->type  == 'select'){
+			$input->getOptionsFormObject($element);
+        }
 		$input->getAttributesFromObject($element);
 		return $input;
 	}
+	/**
+	 * Import an select options into the Input class.
+	 * @param DOMNode $element - HTML element object.
+	 * @return void
+	 */
+	private function getOptionsFormObject(DOMNode $element):void{
+        foreach ($element->childNodes as $child) {
+        	if ($child->nodeName == 'option') {
+            	$this->addOption($child->getAttribute('value'),$child->nodeValue);
+            }
+        }
+	}
 
+	public function addOption(string $value,?string $text = null):void{
+		$this->options = ['value'=>$value,'text'=>$text];
+	}
+	public function addOptionArray(array $options) :void{
+		foreach($options as $option){
+			$this->addOption($option['value'],$option['text']??null)
+		}
+	}
 	/**
 	 * Set attributes for the input.
 	 * @param array $attributes - Array of attributes.
 	 * @return void
 	 */
-	public function setAttributes(array $attributes) {
+	public function setAttributes(array $attributes):void {
 		$this->attributes = array_change_key_case($attributes, CASE_LOWER);
 	}
 
@@ -63,7 +94,7 @@ class Input {
 	 * @param string $method - HTTP method ('get' or 'post').
 	 * @return void
 	 */
-	function setMethod(string $method):void {
+	public function setMethod(string $method):void {
 		$this->method = mb_strtolower($method);
 	}
 
@@ -71,7 +102,7 @@ class Input {
 	 * Check if the input is an array type.
 	 * @return bool - True if it's an array, false otherwise.
 	 */
-	function isArray() {
+	private function isArray() {
 		if (preg_match('/(\[([0-9a-zA-Z]*)\])/', $this->getAttribute('name')) == false) {
 			return false;
 		}
@@ -82,7 +113,7 @@ class Input {
 	 * Get the name attribute of the input.
 	 * @return string|null - The name attribute if it's not an array, null otherwise.
 	 */
-	function getName() {
+	public function getName() {
 		if (!$this->isArray()) {
 			return $this->getAttribute('name');
 		}
@@ -92,7 +123,7 @@ class Input {
 	 * Get the tag name of the HTML element.
 	 * @return string - The tag name.
 	 */
-	function getType() {
+	public function getType() {
 		return $this->type;
 	}
 
@@ -100,7 +131,7 @@ class Input {
 	 * Get attributes of the HTML element.
 	 * @return array|false - Array of attributes if available, false if none.
 	 */
-	private function getAttributesFromObject(object $element) {
+	private function getAttributesFromObject(DOMNode $element) {
 		if (!$element->hasAttributes()) {
 			return false;
 		}
@@ -120,7 +151,7 @@ class Input {
 	 * @param string $name - Attribute name.
 	 * @return string|false - Attribute value if exists, false otherwise.
 	 */
-	function getAttribute($name) {
+	public function getAttribute($name) {
 		$name = mb_strtolower($name);
 		return $this->attributes[$name] ?? false;
 	}
@@ -129,7 +160,7 @@ class Input {
 	 * Get the type attribute of the input.
 	 * @return string|false - Type attribute if exists, false otherwise.
 	 */
-	function getInputType() {
+	public function getInputType() {
 		$type = $this->getAttribute('type');
 		if(is_string($type)){
 			return mb_strtolower($type);
@@ -141,8 +172,17 @@ class Input {
 	 * Get the value of the input based on the HTTP method.
 	 * @return mixed|null - Input value or null if it doesn't exist.
 	 */
-	function getValue() {
-		$method = ($this->method == 'post') 		? $_POST : $_GET;
+	public function getValue() {
+		if(is_null($this->method) && is_null($this->form)){
+			$this->setCodeAlert(new Exception(_("No form or method set"));
+			$method = $_GET;
+		}
+		if(!is_null($this->method)){
+			$method = ($this->method == 'post') 		? $_POST : $_GET;
+		}
+		if(!($this->form instanceof Form) || !is_null($this->form->getmethod())){
+			$method = ($this->form->getmethod() == 'post') 		? $_POST : $_GET;
+		}
 		$method = ($this->getInputType() == 'file') ? $_FILES : $method;
 		if (!$this->isArray()) {
 			if (!isset($method[$this->getName()])) {
@@ -193,17 +233,17 @@ class Input {
 	 * @param int|null $key - Specific key for array inputs.
 	 * @return void
 	 */
-	private function setCodeAlert($e, $key = null): void {
-		error_log($e);
-		if (!$this->isArray()) {
-			$this->codeAlerts[] = $e->getMessage();
-			return;
+		private function setCodeAlert($e, $key = null): void {
+			error_log($e);
+			if (!$this->isArray()) {
+				$this->codeAlerts[] = $e->getMessage();
+				return;
+			}
+			if (!isset($this->codeAlerts[$key])) {
+				$this->codeAlerts[$key] = [];
+			}
+			$this->codeAlerts[$key][] = $e->getMessage();
 		}
-		if (!isset($this->codeAlerts[$key])) {
-			$this->codeAlerts[$key] = [];
-		}
-		$this->codeAlerts[$key][] = $e->getMessage();
-	}
 
 	/* validator helpers */
 
@@ -214,32 +254,46 @@ class Input {
 	private function validate() {
 		$values = (array)$this->getValue();
 		if (empty($values)) {
-			$this->validateMethods('');
+			$this->validateAttributes('');
 		}
 		foreach ($values as $key => $value) {
-			$this->validateMethods($value, $key);
+			$this->validateAttributes($value, $key);
+			$this->validateTagType($value);
+			
 		}
 	}
-
+	private function validateTagType($value,$key =0){
+		if(method_exists($this, 'validate' . $this->getType()) {
+			try {
+				call_user_func([$this, 'validate' . $this->getType()], $value);
+				$this->validatedOn[] = 'validate' . $this->getType();
+			} catch (InvalidInput $e) {
+				$this->setError($e, $key);
+				$this->isValid = false;
+			} catch (InvalidCodeAlert $e) {
+				$this->setCodeAlert($e, $key);
+			} 
+		}
+	}
 	/**
 	 * Validate specific attributes for the given value.
 	 * @param mixed $value - Input value.
 	 * @param int|string $key - Specific key for array inputs.
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
-	private function validateMethods($value, $key = 0) {
+	private function validateAttributes($value, $key = 0) {
 		foreach ($this->attributes as $attribute => $attribute_value) {
 			if (method_exists($this, 'validate' . $attribute)) {
-			try {
-				call_user_func([$this, 'validate' . $attribute], $value);
-				$this->validatedOn[] = 'validate' . $attribute;
-			} catch (InvalidInput $e) {
-				$this->setError($e, $key);
-				$this->isValid = false;
-			} catch (InvalidCodeAlert $e) {
-				$this->setCodeAlert($e, $key);
-			
-			} 
+				try {
+					call_user_func([$this, 'validate' . $attribute], $value);
+					$this->validatedOn[] = 'validate' . $attribute;
+				} catch (InvalidInput $e) {
+					$this->setError($e, $key);
+					$this->isValid = false;
+				} catch (InvalidCodeAlert $e) {
+					$this->setCodeAlert($e, $key);
+				
+				} 
 			}
 		}
 	}
@@ -265,10 +319,22 @@ class Input {
 		}
 		if (filter_var($element['value'], $filter) === false) {
 			throw new InvalidInput(_("Invalid value"));
+			return false;
 		}
 		return true;
 	}
-
+	/* tagType validation */
+	private function validateSelect($value){
+		if($this->dynamicSelect){
+			return true;
+		}
+		$options = array_column('value',$this->options);
+		if(!in_array($value,$options)){
+			throw new InvalidInput(_("Invalid value"));
+			return false;
+		}
+		return true; 
+	}
 	/* attributes validation */
 
 	/**
@@ -320,6 +386,7 @@ class Input {
 		}
 		if (filter_var($value, FILTER_VALIDATE_REGEXP, ["options" => ["regexp" => "/^" . $this->getAttribute('pattern') . "$/"]]) === false) {
 			throw new InvalidInput(_("Value doesn't match pattern"));
+			return false;
 		}
 		return true;
 	}
@@ -340,23 +407,29 @@ class Input {
 		}
 		if (in_array($this->getInputType(), ['range', 'number'])) {
 			if ($value < $this->getAttribute('min')) {
-				throw new InvalidInput(_("Value lower than required minimum"));
+				$sValue = date($this->format[$this->getInputType()], strtotime($value));
+				$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('min'));
+				throw new InvalidInput(sprintf(_("Value `%s` lower than required minimum: %s"),$sValue,$sAttr));
 				return false;
 			}
-		} else {
-			if (preg_match($this->regex[$this->getInputType()], $this->getAttribute('min')) == false || strtotime($this->getAttribute('min'))) {
-				throw new InvalidCodeAlert(_("Invalid Attribute value"));
-				return true;
-			}
-			if (preg_match($this->regex[$this->getInputType()], $value) == false || strtotime($value) == false) {
-				throw new InvalidInput(_("Value has an invalid format"));
-				return false;
-			}
-			if (strtotime($value) < strtotime($this->getAttribute('min'))) {
-				throw new InvalidInput(_("Value lower than required minimum"));
-				return false;
-			}
+			return true;
+		} 
+		//if (in_array($this->getInputType(), ['date', 'month', 'week', 'datetime-local', 'time']){
+		if (preg_match($this->regex[$this->getInputType()], $this->getAttribute('min')) == false || strtotime($this->getAttribute('min'))) {
+			throw new InvalidCodeAlert(_("Invalid Attribute value"));
+			return true;
 		}
+		if (preg_match($this->regex[$this->getInputType()], $value) == false || strtotime($value) == false) {
+			throw new InvalidInput(_("Value has an invalid format"));
+			return false;
+		}
+		if (strtotime($value) < strtotime($this->getAttribute('min'))) {
+			$sValue = date($this->format[$this->getInputType()], strtotime($value));
+			$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('min'));
+			throw new InvalidInput(sprintf(_("Value `%s` lower than required minimum: %s"),$sValue,$sAttr));
+			return false;
+		}
+		//}
 		return true;
 	}
 
@@ -366,9 +439,43 @@ class Input {
 	 * @return void
 	 */
 	private function validateMax($value) {
-		if (!in_array($this->getAttribute('type'), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
+		if (!in_array($this->getInputType(), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Max"));
 		}
+		if (!in_array($this->getInputType(), ['date', 'number', 'month', 'week', 'datetime-local', 'range', 'time'])) {
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Min"));
+			return true;
+		}
+		if (empty($value)) {
+			throw new InvalidCodeAlert(_("No value"));
+			return true;
+		}
+		if (in_array($this->getInputType(), ['range', 'number'])) {
+			if ($value > $this->getAttribute('max')) {
+				$sValue = date($this->format[$this->getInputType()], strtotime($value));
+				$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('max'));
+				throw new InvalidInput(sprintf(_("Value `%s` higher than maximum of `%s`"),$sValue,$sAttr));
+				return false;
+			}
+			return true;
+		} 
+		//if (in_array($this->getInputType(), ['date', 'month', 'week', 'datetime-local', 'time']){
+		if (preg_match($this->regex[$this->getInputType()], $this->getAttribute('max')) == false || strtotime($this->getAttribute('min'))) {
+			throw new InvalidCodeAlert(_("Invalid Attribute value"));
+			return true;
+		}
+		if (preg_match($this->regex[$this->getInputType()], $value) == false || strtotime($value) == false) {
+			throw new InvalidInput(_("Value has an invalid format"));
+			return false;
+		}
+		if (strtotime($value) > strtotime($this->getAttribute('min'))) {
+			$sValue = date($this->format[$this->getInputType()], strtotime($value));
+			$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('max'));
+			throw new InvalidInput(sprintf(_("Value `%s` higher than maximum of `%s`"),$sValue,$sAttr));
+			return false;
+		}
+		//}
+		return true;
 	}
 
 	/**
@@ -377,7 +484,7 @@ class Input {
 	 * @return void
 	 */
 	private function validateRequired($value) {
-		if ($this->type != 'textarea' && $this->type != 'select' && !in_array($this->getAttribute('type'), ['text', 'search', 'url', 'tel', 'email', 'password', 'checkbox'])) {
+		if ($this->type != 'textarea' && $this->type != 'select' && !in_array($this->getInputType(), ['text', 'search', 'url', 'tel', 'email', 'password', 'checkbox'])) {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Required"));
 			return true;
 		}
@@ -399,7 +506,7 @@ class Input {
 	#week	An integer number of weeks
 	#datetime-local, time	An integer number of seconds
 	#range, number	An integer
-	if(!in_array($this->getAttribute('type'),['date','month', 'week','datetime-local','range'])){
+	if(!in_array($this->getInputType(),['date','month', 'week','datetime-local','range'])){
 		throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Step"));
 	}
 	}
@@ -411,7 +518,7 @@ class Input {
 	private function validateMinlength($value){
 	
 	#text, search, url, tel, email, password; also on the <textarea> element
-	if($this->type != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
+	if($this->type != 'textarea' && !in_array($this->getInputType(),['text', 'search', 'url', 'tel', 'email', 'password'])){
 		throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Minlength"));
 		return true;
 	}
@@ -435,70 +542,117 @@ class Input {
 	 */
 	private function validateMaxlength($value){
 	
-	#text, search, url, tel, email, password; also on the <textarea> element
-	if($this->type != 'textarea' && !in_array($this->getAttribute('type'),['text', 'search', 'url', 'tel', 'email', 'password'])){
-		throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Maxlength"));
+		#text, search, url, tel, email, password; also on the <textarea> element
+		if($this->type != 'textarea' && !in_array($this->getInputType(),['text', 'search', 'url', 'tel', 'email', 'password'])){
+			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Maxlength"));
+		}
+		if(empty($value)){
+			throw new InvalidCodeAlert(_("No value"));
+		}
+		if(filter_var($this->getAttribute('maxlength'), FILTER_VALIDATE_INT) === false){
+			return true;
+		}
+		if(mb_strlen($value) > $this->getAttribute('maxlength')){
+			throw new InvalidInput(_('Value is longer than the maximum permitted length'));
+			return false;
+		}
 	}
-	if(empty($value)){
-		throw new InvalidCodeAlert(_("No value"));
-	}
-	if(filter_var($this->getAttribute('maxlength'), FILTER_VALIDATE_INT) === false){
-		return true;
-	}
-	if(mb_strlen($value) > $this->getAttribute('maxlength')){
-		throw new InvalidInput(_('Value is longer than the maximum permitted length'));
-	}
-	}
-	private function validateFile($value){
+	private $sizeToByte = function($size) {
+		$unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
+		$size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
+		if ($unit) {
+			// Find the position of the unit in the string
+			$pos = strpos('bkmgtpezy', strtolower($unit[0]));
+			if ($pos !== false) {
+				// Convert the size to bytes
+				$size = $size * pow(1024, $pos + 1);
+			}
+		}
+		return $size;
+	};
+
+	private $readableSize = function($bytes) {
+		$units = array('B', 'KB', 'MB', 'GB', 'TB', 'PB');
+		for ($i = 0; $bytes > 1024; $i++) {
+			$bytes /= 1024;
+		}
+		return round($bytes, 2) . ' ' . $units[$i];
+	};
+	private function validateFile($value):boolean{
 		if(!is_array($value) || key_exists('error',$value))
 			throw new InvalidInput(_('unexcepeted value'));	
 			return false;
 		}
+		$sizeToByte 
+		$upload_max_filesize 	= $this->sizeToBytes(ini_get('upload_max_filesize'));
+		$post_max_size 			= $this->sizeToBytes(ini_get('post_max_size'))
+		$uploadMaxSize 			= $this->readableSize(min($upload_max_filesize,$post_max_size));
+		
 		switch($value['error']){
-			case UPLOAD_ERR_INI_SIZE: 	
-				throw new InvalidInput(_('File exceeds max size in php.ini'));	
+			case UPLOAD_ERR_OK:
+				return true;
+				break;
+			case UPLOAD_ERR_INI_SIZE:
+			case UPLOAD_ERR_PARTIAL:
+				$uploadedFileSize 	= $this->readableSize($_FILES['uploadedFile']['size']);
+				throw new InvalidInput(sprintf(_('File size of %s exceeds max size of %s'),$uploadedFileSize, $uploadMaxSize));	
 				return false;
-			break;
-			case UPLOAD_ERR_PARTIAL:	
-				throw new InvalidInput(_('File exceeds max size in html form'));	
-				return false;
-			break;
+				break;
 			case UPLOAD_ERR_NO_FILE: 	
-				throw new InvalidInput(_('File No file was uploaded'));			
+				throw new InvalidInput(_('No file was uploaded'));			
 				return false;
-			break;
+				break;
 			case UPLOAD_ERR_NO_TMP_DIR:	
-				throw new InvalidInput(_('No /tmp dir to write to'));
+				throw new InvalidInput(_('No tmp dir to write to'));
 				return false;
-			break;
+				break;
 			case UPLOAD_ERR_CANT_WRITE:	
-				throw new InvalidInput(_('File:: Error writing to disk'));
+				throw new InvalidInput(_('Error writing to disk'));
 				return false;
-			break;
+				break;
 			default:
 				return true;
 		}
+	}
+	function validateDate($value):boolean{
+		if (!preg_match($this->regex[$this->getInputType()], $value)) {
+			throw new InvalidInput(_('Date is not valid according to regex'));
+			return false;
+		}
+		$date = DateTime::createFromFormat($this->format[$this->getInputType()], $value);
+		$errors = DateTime::getLastErrors();
+		if (!empty($errors['warning_count'])) {
+			throw new InvalidInput(_('Date is not valid according to format'));
+			return false;
+		}
+		// Date is valid
+		return true;
 	}
 	/**
 	 * Validate the 'required' attribute for specific input types.
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
-	private function validateType($value){
-		/*
-			case UPLOAD_ERR_INI_SIZE: 	return ['File exceeds max size in php.ini'];break;
-			case UPLOAD_ERR_PARTIAL:	return ['File exceeds max size in html form'];break;
-			case UPLOAD_ERR_NO_FILE: 	return ['File No file was uploaded'];break;
-			case UPLOAD_ERR_NO_TMP_DIR:	return ['No /tmp dir to write to'];break;
-			case UPLOAD_ERR_CANT_WRITE:	return ['File:: Error writing to disk'];break;
-		*/
-		switch($this->getAttribute('type')){
+	private function validateType($value):boolean{
+		switch($this->getInputType()){
 			case 'email':
-			return $this->filterVar($value,FILTER_VALIDATE_EMAIL);
-			break;
+				return $this->filterVar($value,FILTER_VALIDATE_EMAIL);
+				break;
+			case 'url':
+				return $this->filterVar($value, FILTER_VALIDATE_URL);
+				break;
+			case 'number':
+				return $this->filterVar($value, FILTER_VALIDATE_INT);
+				break;
 			case 'file':
-			return $this->validateFile($value,FILTER_VALIDATE_EMAIL);
-			break;
+				return $this->validateFile($value,FILTER_VALIDATE_EMAIL);
+				break;
+			case 'time':
+			case 'week':
+			case 'month':
+			case 'datetime-local':
+				return $this->validateDate($value);
+				break;
 			default:
 			return true;
 		}

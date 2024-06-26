@@ -17,12 +17,18 @@ class Form{
     /**
      * Sets the HTTP method for the form.
      * @param string $method - HTTP method ('get' or 'post').
+     * @return string | null
+     */
+    public function setMethod(string $method):void{
+        $this->method = mb_strtolower($method);
+    }
+    /**
+     * Gets the HTTP method for the form.
      * @return void
      */
-    public function setMethod(string $method){
-        $this->method = $method;
-    }
-
+    public function getMethod() : ?string{
+        return $this->method;
+     }
     /**
      * Adds an input element to the form.
      * @param object $input - Input object.
@@ -48,7 +54,7 @@ class Form{
     public function decodeHTML(string $html){
         $dom = new \DOMDocument();
         libxml_use_internal_errors(true);
-        $dom->loadHTML($html);
+            $dom->loadHTML($html);
         libxml_use_internal_errors(false);
         $xpath = new \DOMXpath($dom);
         $elements = $xpath->query('//form | //label | //input | //select | //textarea | //button');

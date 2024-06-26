@@ -253,9 +253,7 @@ class Input {
 	 */
 	private function validate() : bool {
 		$values = $this->getValue();
-		if (empty($values)) {
-			$this->validateAttributes('');
-		}
+		
 		if($this->isArray()){
 			foreach ($values as $key => $value) {
 				$this->validateAttributes($value, $key);
@@ -495,6 +493,7 @@ class Input {
 	 * @return void
 	 */
 	private function validateRequired($value) : bool{
+		echo 'validateRequired';
 		if ($this->type != 'textarea' && $this->type != 'select' && !in_array($this->getInputType(), ['text', 'search', 'url', 'tel', 'email', 'password', 'checkbox'])) {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Required"));
 			return true;

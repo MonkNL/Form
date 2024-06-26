@@ -517,7 +517,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
-	private function validateMinlength($value):boolean{{
+	private function validateMinlength($value):boolean{
 		
 		#text, search, url, tel, email, password; also on the <textarea> element
 		if($this->type != 'textarea' && !in_array($this->getInputType(),['text', 'search', 'url', 'tel', 'email', 'password'])){
@@ -542,7 +542,7 @@ class Input {
 	 * @param mixed $value - Input value.
 	 * @return void
 	 */
-	private function validateMaxlength($value):boolean{{
+	private function validateMaxlength($value):boolean{
 	
 		#text, search, url, tel, email, password; also on the <textarea> element
 		if($this->type != 'textarea' && !in_array($this->getInputType(),['text', 'search', 'url', 'tel', 'email', 'password'])){
@@ -581,7 +581,7 @@ class Input {
 		return round($bytes, 2) . ' ' . $units[$i];
 	};
 	private function validateFile($value):boolean{
-		if(!is_array($value) || key_exists('error',$value))
+		if(!is_array($value) || key_exists('error',$value)){
 			throw new InvalidInput(_('unexcepeted value'));	
 			return false;
 		}

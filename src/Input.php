@@ -410,7 +410,7 @@ class Input {
 		if (in_array($this->getInputType(), ['range', 'number'])) {
 			if ($value < $this->getAttribute('min')) {
 				$sValue = date($this->format[$this->getInputType()], strtotime($value));
-				$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('min'));
+				$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('min')));
 				throw new InvalidInput(sprintf(_("Value `%s` lower than required minimum: %s"),$sValue,$sAttr));
 				return false;
 			}
@@ -455,7 +455,7 @@ class Input {
 		if (in_array($this->getInputType(), ['range', 'number'])) {
 			if ($value > $this->getAttribute('max')) {
 				$sValue = date($this->format[$this->getInputType()], strtotime($value));
-				$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('max'));
+				$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('max')));
 				throw new InvalidInput(sprintf(_("Value `%s` higher than maximum of `%s`"),$sValue,$sAttr));
 				return false;
 			}

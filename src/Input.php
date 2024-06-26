@@ -47,10 +47,10 @@ class Input {
 	}
 	/**
 	 * Import an object into the Input class.
-	 * @param DOMNode $element - HTML element object.
+	 * @param DOMElement  $element - HTML element object.
 	 * @return Input - An instance of the Input class.
 	 */
-	static function importObject(DOMNode $element) {
+	static function importObject(DOMElement  $element) {
 		$input 			= new self();
 		$input->type 	= $element->tagName;
 		if($input->type  == 'select'){

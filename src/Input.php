@@ -586,6 +586,7 @@ class Input {
 	}
 	private function validateFile($value) : bool{
 		if(!is_array($value) || key_exists('error',$value)){
+			print_r($value);
 			throw new InvalidInput(_('unexcepeted value'));	
 			return false;
 		}
@@ -621,7 +622,7 @@ class Input {
 	}
 	function validateDate($value) : bool{
 		if (!preg_match($this->regex[$this->getInputType()], $value)) {
-			throw new InvalidInput(_('Date is not valid according to regex'));
+			throw new InvalidInput(_('Date is not valid according to regex ['.$this->regex[$this->getInputType()].']'));
 			return false;
 		}
 		$date = DateTime::createFromFormat($this->format[$this->getInputType()], $value);

@@ -559,12 +559,14 @@ class Input {
 			throw new InvalidCodeAlert(_("No value"));
 		}
 		if(filter_var($this->getAttribute('maxlength'), FILTER_VALIDATE_INT) === false){
+			throw new InvalidCodeAlert(_("Invalid attribute value"));
 			return true;
 		}
 		if(mb_strlen($value) > $this->getAttribute('maxlength')){
 			throw new InvalidInput(_('Value is longer than the maximum permitted length'));
 			return false;
 		}
+		return true;
 	}
 	private function sizeToBytes($size) {
 		$unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.

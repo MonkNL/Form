@@ -77,7 +77,7 @@ class Input {
 	}
 	public function addOptionArray(array $options) :void{
 		foreach($options as $option){
-			$this->addOption($option['value'],$option['text']??null)
+			$this->addOption($option['value'],$option['text']??null);
 		}
 	}
 	/**

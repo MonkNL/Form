@@ -353,6 +353,9 @@ class Input {
 		if ($this->getInputType() != 'file') {
 			throw new InvalidCodeAlert(sprintf(_("Input `%s`  doesn't support this attribute: %s"), $this->getInputType(),"Accept"));
 		}
+		if($value['error'] != UPLOAD_ERR_OK){
+			return true;
+		}
 		$fileInfo 		= finfo_open(FILEINFO_MIME_TYPE);
 		$detectedType 	= finfo_file( $fileInfo, $value['tmp_name']);
 		$acceptedTypes	= $this->getAttribute('accept'); 
@@ -369,7 +372,7 @@ class Input {
 
 		}
 		if(!$accepted){
-			throw new InvalidInputsprintf(sprintf(_("The file type `%s` is not supported. Only these types are supported: %s"), $detected_type, $this->getAttribute('accept')));
+			throw new InvalidInput(sprintf(_("The file type `%s` is not supported. Only these types are supported: %s"), $detected_type, $this->getAttribute('accept')));
 			return false;	
 		}
 		

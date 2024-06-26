@@ -174,7 +174,7 @@ class Input {
 	 */
 	public function getValue() {
 		if(is_null($this->method) && is_null($this->form)){
-			$this->setCodeAlert(new Exception(_("No form or method set"));
+			$this->setCodeAlert(new Exception(_("No form or method set")));
 			$method = $_GET;
 		}
 		if(!is_null($this->method)){

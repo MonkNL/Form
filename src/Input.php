@@ -103,6 +103,9 @@ class Input {
 	 * @return bool - True if it's an array, false otherwise.
 	 */
 	private function isArray() {
+		if($this->getInputType() == 'file'){
+			return false;
+		}
 		if (preg_match('/(\[([0-9a-zA-Z]*)\])/', $this->getAttribute('name')) == false) {
 			return false;
 		}
@@ -184,6 +187,7 @@ class Input {
 			$method = ($this->form->getMethod() == 'post') 		? $_POST : $_GET;
 		}
 		$method = ($this->getInputType() == 'file') ? $_FILES : $method;
+
 		if (!$this->isArray()) {
 			if (!isset($method[$this->getName()])) {
 			return null;

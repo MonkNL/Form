@@ -187,10 +187,12 @@ class Input {
 			$method = ($this->form->getMethod() == 'post') 		? $_POST : $_GET;
 		}
 		$method = ($this->getInputType() == 'file') ? $_FILES : $method;
-
+		if($this->getInputType() == 'file'){
+				return array($_FILES[$this->getName()]);
+		}
 		if (!$this->isArray()) {
 			if (!isset($method[$this->getName()])) {
-			return null;
+				return null;
 			}
 			return $method[$this->getName()];
 		}
@@ -586,7 +588,6 @@ class Input {
 	}
 	private function validateFile($value) : bool{
 		if(!is_array($value) || key_exists('error',$value)){
-			print_r($value);
 			throw new InvalidInput(_('unexcepeted value'));	
 			return false;
 		}

@@ -169,7 +169,15 @@ class Input {
 		}
 		return  $type;
 	}
-
+	/**
+	 * Sanitize and return the value of the input.
+	 *
+	 * @return string - Sanitized input value.
+	 */
+	private function getSanitizedValue() {
+		$value = $this->getValue()??'';
+        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    }
 	/**
 	 * Get the value of the input based on the HTTP method.
 	 * @return mixed|null - Input value or null if it doesn't exist.
@@ -180,16 +188,18 @@ class Input {
 			$method = $_GET;
 		}
 		if(!is_null($this->method)){
-			$method = ($this->method == 'post') 		? $_POST : $_GET;
+			$method = ($this->method == 'post') ? $_POST : $_GET;
 		}
 		if(($this->form instanceof Form) && !is_null($this->form->getMethod())){
-			$method = ($this->form->getMethod() == 'post') 		? $_POST : $_GET;
+			$method = ($this->form->getMethod() == 'post')? $_POST : $_GET;
 		}
-		$method = ($this->getInputType() == 'file') ? $_FILES : $method;
-		if (!$this->isArray()) {
-			if (!isset($method[$this->getName()])) {
-				return null;
-			}
+		if($this->getInputType() == 'file'){
+			$method = $_FILES;
+		}
+		if (!$this->isArray() && !isset($method[$this->getName()])) {
+			return null;
+		}
+		if (!$this->isArray()){
 			return $method[$this->getName()];
 		}
 
@@ -465,7 +475,7 @@ class Input {
 		if (in_array($this->getInputType(), ['range', 'number'])) {
 			if ($value > $this->getAttribute('max')) {
 				$sValue = date($this->format[$this->getInputType()], strtotime($value));
-				$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('max')));
+				$sAttr 	= date($this->format[$this->getInputType()], strtotime($this->getAttribute('max')));
 				throw new InvalidInput(sprintf(_("Value `%s` higher than maximum of `%s`"),$sValue,$sAttr));
 				return false;
 			}
@@ -482,7 +492,7 @@ class Input {
 		}
 		if (strtotime($value) > strtotime($this->getAttribute('min'))) {
 			$sValue = date($this->format[$this->getInputType()], strtotime($value));
-			$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('max')));
+			$sAttr	= date($this->format[$this->getInputType()], strtotime($this->getAttribute('max')));
 			throw new InvalidInput(sprintf(_("Value `%s` higher than maximum of `%s`"),$sValue,$sAttr));
 			return false;
 		}
@@ -654,15 +664,31 @@ class Input {
 	 * @return void
 	 */
 	private function validateType($value) : bool{
+		if(empty($value)){
+			throw new InvalidCodeAlert(_("No value"));
+			return true;
+		}
 		switch($this->getInputType()){
 			case 'email':
-				return $this->filterVar($value,FILTER_VALIDATE_EMAIL);
+				if(filter_var($value,FILTER_VALIDATE_EMAIL) === false){
+					throw new InvalidInput(sprintf(_('The provided value "%s" is not a valid email'), $this->getSanitizedValue()));
+					return false;
+				}
+				return true;
 				break;
 			case 'url':
-				return $this->filterVar($value, FILTER_VALIDATE_URL);
+				if(filter_var($value,FILTER_VALIDATE_URL) === false){
+					throw new InvalidInput(sprintf(_('The provided value "%s" is not a valid URL'), $this->getSanitizedValue()));
+					return false;
+				}
+				return true;
 				break;
 			case 'number':
-				return $this->filterVar($value, FILTER_VALIDATE_INT);
+				if(filter_var($value, FILTER_VALIDATE_INT) === false){
+					throw new InvalidInput(sprintf(_('The provided value "%s" is not a valid number'), $this->getSanitizedValue()));
+					return false;
+				}
+				return true;
 				break;
 			case 'file':
 				return $this->validateFile($value);

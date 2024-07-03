@@ -118,4 +118,7 @@ class Form{
     function valid(){
         return $this->validate();
     }
+    function parse(){
+        $parser = new Parser($this->getElements());
+    }
 }

@@ -88,7 +88,9 @@ class Input {
 	public function setAttributes(array $attributes):void {
 		$this->attributes = array_change_key_case($attributes, CASE_LOWER);
 	}
-
+	public function getAttributes(){
+		return $this->attributes;
+	}
 	/**
 	 * Set the HTTP method for the input.
 	 * @param string $method - HTTP method ('get' or 'post').

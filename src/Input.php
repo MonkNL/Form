@@ -321,10 +321,11 @@ class Input {
 	 * @return bool - True if validation is successful, false otherwise.
 	 */
 	private function filterVar($value, $filter) : bool{
-		if (empty($element['value'])) {
+		if (empty($value)) {
 			throw new InvalidCodeAlert(_("No value"));
+			return true;
 		}
-		if (filter_var($element['value'], $filter) === false) {
+		if (filter_var($value, $filter) === false) {
 			throw new InvalidInput(_("Invalid value"));
 			return false;
 		}
@@ -664,7 +665,7 @@ class Input {
 				return $this->filterVar($value, FILTER_VALIDATE_INT);
 				break;
 			case 'file':
-				return $this->validateFile($value,FILTER_VALIDATE_EMAIL);
+				return $this->validateFile($value);
 				break;
 			case 'time':
 			case 'week':

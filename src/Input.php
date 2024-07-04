@@ -647,8 +647,8 @@ class Input {
 			throw new InvalidInput(_('Date is not valid according to regex ['.$this->regex[$this->getInputType()].']:'.$value));
 			return false;
 		}
-		$date = DateTime::createFromFormat($this->format[$this->getInputType()], $value);
-		$errors = DateTime::getLastErrors();
+		$date = \DateTime::createFromFormat($this->format[$this->getInputType()], $value);
+		$errors = \DateTime::getLastErrors();
 		if (!empty($errors['warning_count'])) {
 			throw new InvalidInput(_('Date is not valid according to format'));
 			return false;

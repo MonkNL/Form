@@ -429,9 +429,7 @@ class Input {
 		}
 		if (in_array($this->getInputType(), ['range', 'number'])) {
 			if ($value < $this->getAttribute('min')) {
-				$sValue = date($this->format[$this->getInputType()], strtotime($value));
-				$sAttr = date($this->format[$this->getInputType()], strtotime($this->getAttribute('min')));
-				throw new InvalidInput(sprintf(_("Value `%s` lower than required minimum: %s"),$sValue,$sAttr));
+				throw new InvalidInput(sprintf(_("Value `%s` lower than required minimum: %s"),$this->getSanitizedValue(),$this->getAttribute('min')));
 				return false;
 			}
 			return true;

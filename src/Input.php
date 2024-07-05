@@ -8,7 +8,7 @@ class InvalidInput extends \Exception { }
 class InvalidCodeAlert extends \Exception { }
 
 class Input {
-	private $type, $method = 'get',$form = null,$options = [],$dynamicSelect = false;
+	private $type, $method = 'get',$form = null;
 	private $isValid = true, $error = [],$codeAlerts = [], $validatedOn = [];
 	public $attributes = [];
 
@@ -51,35 +51,15 @@ class Input {
 	 * @return Input - An instance of the Input class.
 	 */
 	static function importObject(\DOMElement  $element) {
+		if ($element->tagName == 'select') {
+			return Select::importObject($element);
+		}
 		$input 			= new self();
 		$input->type 	= $element->tagName;
-		if($input->type  == 'select'){
-			$input->getOptionsFormObject($element);
-        }
 		$input->getAttributesFromObject($element);
 		return $input;
 	}
-	/**
-	 * Import an select options into the Input class.
-	 * @param DOMNode $element - HTML element object.
-	 * @return void
-	 */
-	private function getOptionsFormObject(\DOMElement $element):void{
-        foreach ($element->childNodes as $child) {
-        	if ($child->nodeName == 'option') {
-            	$this->addOption($child->getAttribute('value'),$child->nodeValue);
-            }
-        }
-	}
 
-	public function addOption(string $value,?string $text = null):void{
-		$this->options[] = ['value'=>$value,'text'=>$text];
-	}
-	public function addOptionArray(array $options) :void{
-		foreach($options as $option){
-			$this->addOption($option['value'],$option['text']??null);
-		}
-	}
 	/**
 	 * Set attributes for the input.
 	 * @param array $attributes - Array of attributes.
@@ -341,18 +321,6 @@ class Input {
 		}
 		return true;
 	}
-	/* tagType validation */
-	private function validateSelect($value) : bool{
-		if($this->dynamicSelect){
-			return true;
-		}
-		$options = array_column($this->options,'value');
-		if(!in_array($value,$options)){
-			throw new InvalidInput(_("Invalid value"));
-			return false;
-		}
-		return true; 
-	}
 	/* attributes validation */
 
 	/**
@@ -426,6 +394,10 @@ class Input {
 		if (empty($value)) {
 			throw new InvalidCodeAlert(_("No value"));
 			return true;
+		}
+		if(!$this->validateType($value)){
+
+			return false;
 		}
 		if (in_array($this->getInputType(), ['range', 'number'])) {
 			if ($value < $this->getAttribute('min')) {

@@ -72,7 +72,37 @@ class Form{
             }
         }
     }
+    public function decodeYAML(string $yaml){
+        $lines			= explode("\n", $yaml);
+        $data			= [];
+        $currentGroup	= &$data;
+        $groupStack 	= [&$data];
+        foreach ($lines as $line) {
+            if (trim($line) === '') {
+                continue;
+            }
+            $indentLevel	= strlen($line) - strlen(ltrim($line, " \t"));
+            $keyValue		= explode(':', trim($line), 2);
+            $key			= $keyValue[0];
+            $value			= isset($keyValue[1]) ? trim($keyValue[1]) : [];
 
+            if ($indentLevel === 0) {
+                $currentGroup = &$data[$key];
+                $groupStack = [&$currentGroup];
+            } else {
+                $parentIndex	= ($indentLevel - 2) / 2;
+                $parent 		= &$groupStack[$parentIndex];
+        
+                if (!is_array($parent)) {
+                    $parent = [];
+                }
+        
+                $parent[$key]	= $value;
+                $groupStack 	= array_slice($groupStack, 0, $parentIndex + 1);
+                $groupStack[]	= &$parent[$key];
+            }
+        }
+    }
     /**
      * Validates all input elements in the form.
      * @return bool
